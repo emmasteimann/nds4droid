@@ -1,0 +1,5 @@
+# Android ndk for agg-2.5
+# http://www.antigrain.com/
+
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
