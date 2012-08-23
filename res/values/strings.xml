@@ -1,5 +1,6 @@
 <resources>
-
+    
+	<!-- Release 1 -->
     <string name="app_name">nds4droid</string>
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
@@ -29,4 +30,28 @@
     <string name="SaveState">Save State</string>
     <string name="RestoreState">Restore State</string>
     <string name="Settings">Settings</string>
+    
+    <!-- Release 2 -->
+    <string name="touchnotify">To toggle between touch mode and keypad mode, tap the "touch" button at the top</string>
+    <string-array name="zerothroughnine">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+    </string-array>
+    <string name="frameskip">Frame skip</string>
+    <string name="frameskipdesc">How many frames to skip when emulating. Helps make slow emulation match real time.</string>
+    <string name="vsync">VSync</string>
+    <string name="vsyncdesc">Only draw to the screen in-between frames. Can slow down emulation but turning off may cause graphical glitches.</string>
+    <string name="fps">Show FPS</string>
+    <string name="fpsdesc">Draw FPS onto screen.</string>
+    <string name="showtouchmsg">Show touch message</string>
+    <string name="showtouchmsgdesc">Display a message to the user explaining touch/keypad mode switching.</string>
+    
 </resources>

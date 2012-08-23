@@ -26,8 +26,10 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -49,15 +51,12 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements OnSharedPreferenceChangeListener {
 
 	static EmulatorThread coreThread;
 	NDSView view;
-	boolean running = false;
 	static final String TAG = "nds4droid";
 	static boolean touchScreenMode = false;
-	static boolean inited = false;
-	static boolean romLoaded = false;
 	
 	Handler msgHandler = new Handler() {
 		
@@ -88,7 +87,12 @@ public class MainActivity extends Activity {
 		
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-		if(!inited) 
+		Settings.applyDefaults(this);
+		prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+		prefs.registerOnSharedPreferenceChangeListener(this);
+		loadJavaSettings();
+		
+		if(!EmulatorThread.inited) 
 			pickRom();
 		
 	}
@@ -102,10 +106,12 @@ public class MainActivity extends Activity {
 	void runEmulation() {
 		boolean created = false;
 		if(coreThread == null) {
-			coreThread = new EmulatorThread();
+			coreThread = new EmulatorThread(this);
 			created = true;
 		}
-		coreThread.setPause(!romLoaded);
+		else
+			coreThread.setCurrentActivity(this);
+		coreThread.setPause(!EmulatorThread.romLoaded);
 		if(created)
 			coreThread.start();
 	}
@@ -114,7 +120,6 @@ public class MainActivity extends Activity {
 		if(coreThread != null) {
 			coreThread.setPause(true);
 		}
-		running = false;
 	}
 	
 	void pickRom() {
@@ -184,6 +189,9 @@ public class MainActivity extends Activity {
 		case R.id.save6: case R.id.save7: case R.id.save8: case R.id.save9:
 			saveState(Integer.valueOf(item.getTitle().toString()));
 			break;
+		case R.id.settings:
+			startActivity(new Intent(this, Settings.class));
+			break;
 		default:
 			return false;
 		}
@@ -192,7 +200,7 @@ public class MainActivity extends Activity {
 	}
 	
 	void restoreState(int slot) {
-		if(romLoaded) {
+		if(EmulatorThread.romLoaded) {
 			coreThread.inFrameLock.lock();
 				DeSmuME.restoreState(slot);
 			coreThread.inFrameLock.unlock();
@@ -200,7 +208,7 @@ public class MainActivity extends Activity {
 	}
 	
 	void saveState(int slot) {
-		if(romLoaded) {
+		if(EmulatorThread.romLoaded) {
 			coreThread.inFrameLock.lock();
 				DeSmuME.saveState(slot);
 			coreThread.inFrameLock.unlock();
@@ -208,113 +216,7 @@ public class MainActivity extends Activity {
 	}
 
 	
-	class EmulatorThread extends Thread {
-		
-		public EmulatorThread() {
-			super("EmulatorThread");
-		}
-		
-		long lastDraw = 0;
-		final AtomicBoolean finished = new AtomicBoolean(false);
-		final AtomicBoolean paused = new AtomicBoolean(false);
-		String pendingRomLoad = null;
-		
-		public void loadRom(String path) {
-			pendingRomLoad = path;
-			synchronized(dormant) {
-				dormant.notifyAll();
-			}
-		}
-		
-		public void setCancel(boolean set) {
-			finished.set(set);
-			synchronized(dormant) {
-				dormant.notifyAll();
-			}
-		}
-		
-		public void setPause(boolean set) {
-			paused.set(set);
-			synchronized(dormant) {
-				dormant.notifyAll();
-			}
-		}
-		
-		Object dormant = new Object();
-		
-		public Lock inFrameLock = new ReentrantLock();
-		int fps = 1;
-		
-		@Override
-		public void run() {
-			
-			while(!finished.get()) {
-				
-				if(!inited) {
-					DeSmuME.context = MainActivity.this.getApplicationContext();
-					DeSmuME.load();
-					
-					final String defaultWorkingDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/nds4droid";
-					final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(DeSmuME.context);
-					final String path = pref.getString("DeSmuMEPath", defaultWorkingDir);
-					final File workingDir = new File(path);
-					DeSmuME.setWorkingDir(workingDir.getAbsolutePath());
-					workingDir.mkdir();
-					new File(path + "/States").mkdir();
-					new File(path + "/Battery").mkdir();
-					
-					
-					DeSmuME.init();
-					inited = true;
-				}
-				if(pendingRomLoad != null) {
-					if(!DeSmuME.loadRom(pendingRomLoad)) {
-						AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-						builder.setMessage(R.string.rom_error).setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
-							
-							@Override
-							public void onClick(DialogInterface arg0, int arg1) {
-								arg0.dismiss();
-								msgHandler.sendEmptyMessage(PICK_ROM);
-							}
-						});
-						builder.create().show();
-					}
-					else {
-						romLoaded = true;
-						paused.set(false);
-					}
-					pendingRomLoad = null;
-				}
-				
-				if(!paused.get()) {
-					
-					inFrameLock.lock();
-					fps = DeSmuME.runCore();
-					inFrameLock.unlock();
-					DeSmuME.runOther();
-					
-					running = true;
-					
-					if(System.currentTimeMillis() - lastDraw > (1000/fps)) {
-						msgHandler.sendEmptyMessage(DRAW_SCREEN);
-						lastDraw = System.currentTimeMillis();
-					}
-					
-				} 
-				else {
-					//hacky, but keeps thread alive so we don't lose contexts
-					try {
-						synchronized(dormant) {
-							dormant.wait();
-						}
-					} 
-					catch (InterruptedException e) {
-					} 
-				}
-			}
-		}
-	}
+	
 	
 	static final int BUTTON_RIGHT = 0;
 	static final int BUTTON_DOWN = 1;
@@ -334,6 +236,23 @@ public class MainActivity extends Activity {
 	
 	final SparseIntArray touchMap = new SparseIntArray();
 	
+	SharedPreferences prefs = null;
+	
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+		if(EmulatorThread.inited)
+			DeSmuME.loadSettings();
+		loadJavaSettings();
+			
+	}
+	
+	void loadJavaSettings()
+	{
+		if(view != null) {
+			view.showTouchMessage = prefs.getBoolean(Settings.SHOW_TOUCH_MESSAGE, true);
+			view.vsync = prefs.getBoolean(Settings.VSYNC, true);
+		}
+	}
 	
 	class NDSView extends SurfaceView {
 
@@ -344,6 +263,9 @@ public class MainActivity extends Activity {
 		final Paint controlsPaint = new Paint();
 		final Paint emuPaint = new Paint();
 		
+		public boolean showTouchMessage = false;
+		public boolean vsync = true;
+		
 		public NDSView(Context context) {
 			super(context);
 			surfaceHolder = getHolder();
@@ -351,12 +273,13 @@ public class MainActivity extends Activity {
 			setKeepScreenOn(true);
 			setWillNotDraw(false);
 			controlsPaint.setAlpha(200);
+			
 		}
 		
 		@Override
 		public void onDraw(Canvas canvas) {
 			
-			if(!inited)
+			if(!EmulatorThread.inited)
 				return;
 			
 			if(width != canvas.getWidth() || height != canvas.getHeight())
@@ -365,15 +288,25 @@ public class MainActivity extends Activity {
 			if(emuBitmap == null)
 				return;
 
-			coreThread.inFrameLock.lock();
+			if(vsync) {
+				coreThread.inFrameLock.lock();
+					DeSmuME.draw(emuBitmap);
+				coreThread.inFrameLock.unlock();
+			}
+			else
 				DeSmuME.draw(emuBitmap);
-			coreThread.inFrameLock.unlock();
 			
 			canvas.drawBitmap(emuBitmap, src, dest, null);
 			if(touchScreenMode)
 				canvas.drawBitmap(touchControls, 0, 0, controlsPaint);
 			else
 				canvas.drawBitmap(controls, 0, 0, controlsPaint);
+			
+			if(showTouchMessage) {
+				prefs.edit().putBoolean(Settings.SHOW_TOUCH_MESSAGE, showTouchMessage = false).apply();
+				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+				builder.setPositiveButton(R.string.OK, null).setMessage(R.string.touchnotify).create().show();
+			}
 		}
 		
 		

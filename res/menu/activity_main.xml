@@ -1,6 +1,6 @@
 
     <menu xmlns:android="http://schemas.android.com/apk/res/android">
-        <item android:id="@+id/load" android:title="@string/Load"></item>
+		<item android:id="@+id/load" android:title="@string/Load"></item>
         <item android:id="@+id/quicksave" android:title="@string/QuickSave"></item>
         <item android:id="@+id/quickrestore" android:title="@string/QuickRestore"></item>
         <item android:id="@+id/savestate" android:title="@string/SaveState">
@@ -29,5 +29,5 @@
                 <item android:id="@+id/restore9" android:title="9"/>
             </menu>
         </item>
-        <!-- <item android:id="@+id/settings" android:title="@string/Settings"></item> -->
+        <item android:id="@+id/settings" android:title="@string/Settings"></item>
     </menu>

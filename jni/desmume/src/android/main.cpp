@@ -447,6 +447,40 @@ void JNI(restoreState, int slot)
 	loadstate_slot(slot);
 }
 
+void loadSettings(JNIEnv* env)
+{
+	CommonSettings.num_cores = 1;
+	CommonSettings.advanced_timing = false;
+	CommonSettings.cheatsDisable = GetPrivateProfileBool(env,"General", "cheatsDisable", false, IniName);
+	CommonSettings.autodetectBackupMethod = GetPrivateProfileInt(env,"General", "autoDetectMethod", 0, IniName);
+	video.rotation =  GetPrivateProfileInt(env,"Video","WindowRotate", 0, IniName);
+	video.rotation_userset =  GetPrivateProfileInt(env,"Video","WindowRotateSet", video.rotation, IniName);
+	video.layout_old = video.layout = GetPrivateProfileInt(env,"Video", "LCDsLayout", 0, IniName);
+	video.swap = GetPrivateProfileInt(env,"Video", "LCDsSwap", 0, IniName);
+	CommonSettings.hud.FpsDisplay = GetPrivateProfileBool(env,"Display","DisplayFps", false, IniName);
+	CommonSettings.hud.FrameCounterDisplay = GetPrivateProfileBool(env,"Display","FrameCounter", false, IniName);
+	CommonSettings.hud.ShowInputDisplay = GetPrivateProfileBool(env,"Display","DisplayInput", false, IniName);
+	CommonSettings.hud.ShowGraphicalInputDisplay = GetPrivateProfileBool(env,"Display","DisplayGraphicalInput", false, IniName);
+	CommonSettings.hud.ShowLagFrameCounter = GetPrivateProfileBool(env,"Display","DisplayLagCounter", false, IniName);
+	CommonSettings.hud.ShowMicrophone = GetPrivateProfileBool(env,"Display","DisplayMicrophone", false, IniName);
+	CommonSettings.hud.ShowRTC = GetPrivateProfileBool(env,"Display","DisplayRTC", false, IniName);
+	CommonSettings.micMode = (TCommonSettings::MicMode)GetPrivateProfileInt(env,"MicSettings", "MicMode", (int)TCommonSettings::InternalNoise, IniName);
+	video.screengap = GetPrivateProfileInt(env,"Display", "ScreenGap", 0, IniName);
+	CommonSettings.showGpu.main = GetPrivateProfileInt(env,"Display", "MainGpu", 1, IniName) != 0;
+	CommonSettings.showGpu.sub = GetPrivateProfileInt(env,"Display", "SubGpu", 1, IniName) != 0;
+	CommonSettings.spu_advanced = GetPrivateProfileBool(env,"Sound", "SpuAdvanced", false, IniName);
+	CommonSettings.advanced_timing = GetPrivateProfileBool(env,"Emulation", "AdvancedTiming", false, IniName);
+	CommonSettings.GFX3D_Zelda_Shadow_Depth_Hack = GetPrivateProfileInt(env,"3D", "ZeldaShadowDepthHack", 0, IniName);
+	CommonSettings.wifi.mode = GetPrivateProfileInt(env,"Wifi", "Mode", 0, IniName);
+	CommonSettings.wifi.infraBridgeAdapter = GetPrivateProfileInt(env,"Wifi", "BridgeAdapter", 0, IniName);
+	frameskiprate = GetPrivateProfileInt(env,"Display", "FrameSkip", 1, IniName);
+}
+
+void JNI_NOARGS(loadSettings)
+{
+	loadSettings(env);
+}
+
 void JNI(init, jobject _inst)
 {
 #ifdef HAVE_NEON
@@ -459,35 +493,15 @@ void JNI(init, jobject _inst)
 	extern bool windows_opengl_init();
 	oglrender_init = android_opengl_init;
 		
-	CommonSettings.num_cores = 1;
-	CommonSettings.advanced_timing = false;
-	path.ReadPathSettings();
 	
-	CommonSettings.cheatsDisable = GetPrivateProfileBool(env,"General", "cheatsDisable", false, IniName);
-	CommonSettings.autodetectBackupMethod = GetPrivateProfileInt(env,"General", "autoDetectMethod", 0, IniName);
-	video.rotation =  GetPrivateProfileInt(env,"Video","Window Rotate", 0, IniName);
-	video.rotation_userset =  GetPrivateProfileInt(env,"Video","Window Rotate Set", video.rotation, IniName);
-	video.layout_old = video.layout = GetPrivateProfileInt(env,"Video", "LCDsLayout", 0, IniName);
+	path.ReadPathSettings();
 	if (video.layout > 2)
 	{
 		video.layout = video.layout_old = 0;
 	}
-	video.swap = GetPrivateProfileInt(env,"Video", "LCDsSwap", 0, IniName);
-	CommonSettings.hud.FpsDisplay = GetPrivateProfileBool(env,"Display","Display Fps", true, IniName);
-	CommonSettings.hud.FrameCounterDisplay = GetPrivateProfileBool(env,"Display","FrameCounter", false, IniName);
-	CommonSettings.hud.ShowInputDisplay = GetPrivateProfileBool(env,"Display","Display Input", false, IniName);
-	CommonSettings.hud.ShowGraphicalInputDisplay = GetPrivateProfileBool(env,"Display","Display Graphical Input", false, IniName);
-	CommonSettings.hud.ShowLagFrameCounter = GetPrivateProfileBool(env,"Display","Display Lag Counter", false, IniName);
-	CommonSettings.hud.ShowMicrophone = GetPrivateProfileBool(env,"Display","Display Microphone", false, IniName);
-	CommonSettings.hud.ShowRTC = GetPrivateProfileBool(env,"Display","Display RTC", false, IniName);
-	CommonSettings.micMode = (TCommonSettings::MicMode)GetPrivateProfileInt(env,"MicSettings", "MicMode", (int)TCommonSettings::InternalNoise, IniName);
-	video.screengap = GetPrivateProfileInt(env,"Display", "ScreenGap", 0, IniName);
-	CommonSettings.showGpu.main = GetPrivateProfileInt(env,"Display", "MainGpu", 1, IniName) != 0;
-	CommonSettings.showGpu.sub = GetPrivateProfileInt(env,"Display", "SubGpu", 1, IniName) != 0;
-	CommonSettings.spu_advanced = GetPrivateProfileBool(env,"Sound", "SpuAdvanced", false, IniName);
-	CommonSettings.advanced_timing = GetPrivateProfileBool(env,"Emulation", "AdvancedTiming", false, IniName);
-	CommonSettings.GFX3D_Zelda_Shadow_Depth_Hack = GetPrivateProfileInt(env,"3D", "ZeldaShadowDepthHack", 0, IniName);
 	
+	loadSettings(env);
+
 	Desmume_InitOnce();
 	//gpu_SetRotateScreen(video.rotation);
 	NDS_FillDefaultFirmwareConfigData(&fw_config);
@@ -538,9 +552,7 @@ void JNI(init, jobject _inst)
 
 	slot1Change((NDS_SLOT1_TYPE)slot1_device_type);
 	addonsChangePak(addon_type);
-	
-	CommonSettings.wifi.mode = GetPrivateProfileInt(env,"Wifi", "Mode", 0, IniName);
-	CommonSettings.wifi.infraBridgeAdapter = GetPrivateProfileInt(env,"Wifi", "BridgeAdapter", 0, IniName);
+
 	
 	NDS_Init();
 	

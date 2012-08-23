@@ -9,7 +9,8 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    		:= 	libdesmumeneon
 LOCAL_C_INCLUDES		:= 	$(LOCAL_PATH)/desmume/src \
-							$(LOCAL_PATH)/desmume/src/android/agg/include
+							$(LOCAL_PATH)/desmume/src/android/agg/include \
+							$(LOCAL_PATH)/desmume/src/android/7z/CPP/Common
 						   
 LOCAL_SRC_FILES			:= 	desmume/src/aggdraw.cpp \
 							desmume/src/addons.cpp \

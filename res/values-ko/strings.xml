@@ -1,0 +1,33 @@
+<resources>
+
+    <string name="app_name">nds4droid</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">설정</string>
+    <string name="title_activity_main">nds4droid</string>
+	<string-array name="file_options">
+		<!--item>이름변경</item--> 
+		<item>삭제</item>
+		<!--item>잘라내기</item-->
+		<!--item>복사</item-->
+		<item>보내기</item>
+	</string-array>
+	<string name="rom_error">ROM 로딩 중 에러가 발생하였습니다 :(</string>
+	<string name="OK">OK</string>
+	<string name="location">위치</string>
+    <string name="cant_read_folder">폴더를 읽을 수 없습니다!</string>
+    <string name="nnew">새로 만들기</string>
+    <string name="select">선택</string>
+    <string name="file_name">파일명:</string>
+    <string name="cancel">취소</string>
+    <string name="create">세이브</string>
+    <string name="no_data">데이터 없음</string>
+    <color name="gray">#ffff0000</color>
+    <string name="err">에러</string>
+    <string name="Load">로드</string>
+    <string name="QuickSave">빠른 세이브</string>
+    <string name="QuickRestore">빠른 복원</string>
+    <string name="SaveState">현재상태 저장</string>
+    <string name="RestoreState">상태 복원</string>
+    <string name="Settings">설정</string>
+	<string name="touchnotify">화면 상단 중앙의 터치 버튼을 사용하여 터치 모드에서 키패드 모드로 전환하실 수 있습니다.</string>
+</resources>

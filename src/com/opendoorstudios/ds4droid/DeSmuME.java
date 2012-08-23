@@ -57,11 +57,31 @@ class DeSmuME {
 	static native void setWorkingDir(String path);
 	static native void saveState(int slot);
 	static native void restoreState(int slot);
+	static native void loadSettings();
 	
 	public static int getSettingInt(String name, int def)
 	{
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(context);
-		return pm.getInt(name, def);
+		if(!pm.contains(name))
+			return def;
+		try {
+			return pm.getInt(name, def);
+		}
+		catch(ClassCastException e) {
+		}
+		try {
+			String ret = pm.getString(name, String.valueOf(def));
+			return Integer.valueOf(ret);
+		}
+		catch(ClassCastException e) {
+		}
+		try {
+			Boolean ret = pm.getBoolean(name, def == 0 ? false : true);
+			return ret.booleanValue() ? 1 : 0;
+		}
+		catch(ClassCastException e) {
+		}
+		return def;
 	}
 
 }
