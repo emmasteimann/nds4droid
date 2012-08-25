@@ -54,7 +54,7 @@ class DeSmuME {
 	static native void touchScreenRelease();
 	static native void setButtons(int l, int r, int up, int down, int left, int right, int a, int b, int x, int y, int start, int select);
 	static native boolean loadRom(String path);
-	static native void setWorkingDir(String path);
+	static native void setWorkingDir(String path, String temp);
 	static native void saveState(int slot);
 	static native void restoreState(int slot);
 	static native void loadSettings();

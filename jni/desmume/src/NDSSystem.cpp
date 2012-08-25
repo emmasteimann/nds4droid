@@ -411,7 +411,7 @@ void GameInfo::populate()
 	isHomebrew = !memcmp(header.gameCode,"####",4);
 }
 
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || defined(ANDROID)
 
 static std::vector<char> buffer;
 static std::vector<char> v;

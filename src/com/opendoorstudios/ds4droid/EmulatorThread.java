@@ -70,7 +70,7 @@ class EmulatorThread extends Thread {
 				final String defaultWorkingDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/nds4droid";
 				final String path = PreferenceManager.getDefaultSharedPreferences(activity).getString(Settings.DESMUME_PATH, defaultWorkingDir);
 				final File workingDir = new File(path);
-				DeSmuME.setWorkingDir(workingDir.getAbsolutePath());
+				DeSmuME.setWorkingDir(workingDir.getAbsolutePath(), activity.getCacheDir().getAbsolutePath());
 				workingDir.mkdir();
 				new File(path + "/States").mkdir();
 				new File(path + "/Battery").mkdir();
@@ -80,28 +80,14 @@ class EmulatorThread extends Thread {
 				inited = true;
 			}
 			if(pendingRomLoad != null) {
+				activity.msgHandler.sendEmptyMessage(MainActivity.LOADING_START);
 				if(!DeSmuME.loadRom(pendingRomLoad)) {
+					activity.msgHandler.sendEmptyMessage(MainActivity.LOADING_END);
+					activity.msgHandler.sendEmptyMessage(MainActivity.ROM_ERROR);
 					romLoaded = false;
-					AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-					builder.setMessage(R.string.rom_error).setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
-						
-						@Override
-						public void onClick(DialogInterface arg0, int arg1) {
-							arg0.dismiss();
-							activity.msgHandler.sendEmptyMessage(MainActivity.PICK_ROM);
-						}
-					}).setOnCancelListener(new OnCancelListener() {
-
-						@Override
-						public void onCancel(DialogInterface arg0) {
-							arg0.dismiss();
-							activity.msgHandler.sendEmptyMessage(MainActivity.PICK_ROM);
-						}
-						
-					});
-					builder.create().show();
 				}
 				else {
+					activity.msgHandler.sendEmptyMessage(MainActivity.LOADING_END);
 					romLoaded = true;
 					paused.set(false);
 				}

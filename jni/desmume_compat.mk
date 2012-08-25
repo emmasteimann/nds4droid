@@ -9,6 +9,9 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    		:= 	libdesmumecompat
 LOCAL_C_INCLUDES		:= 	$(LOCAL_PATH)/desmume/src \
+							$(LOCAL_PATH)/desmume/src/android \
+							$(LOCAL_PATH)/desmume/src/android/7z/CPP \
+							$(LOCAL_PATH)/desmume/src/android/7z/CPP/include_windows \
 							$(LOCAL_PATH)/desmume/src/android/agg/include
 						   
 LOCAL_SRC_FILES			:= 	desmume/src/aggdraw.cpp \
@@ -93,12 +96,14 @@ LOCAL_SRC_FILES			:= 	desmume/src/aggdraw.cpp \
 							desmume/src/filter/scanline.cpp \
 							desmume/src/android/mic.cpp \
 							desmume/src/android/throttle.cpp \
-							desmume/src/android/main.cpp
+							desmume/src/android/main.cpp \
+							desmume/src/android/OpenArchive.cpp \
+							desmume/src/android/7zip.cpp
 							
 LOCAL_ARM_MODE 			:= thumb
 LOCAL_ARM_NEON 			:= false
 LOCAL_CFLAGS			:= -DANDROID -DHAVE_LIBAGG -DHAVE_LIBZ -fexceptions
-LOCAL_STATIC_LIBRARIES 	:= aggcompat
+LOCAL_STATIC_LIBRARIES 	:= aggcompat sevenzip
 LOCAL_LDLIBS 			:= -llog -lz -lGLESv1_CM -lEGL -ljnigraphics
 
 include $(BUILD_SHARED_LIBRARY)

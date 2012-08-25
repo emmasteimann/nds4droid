@@ -146,7 +146,19 @@ public class FileDialog extends ListActivity {
 			f = new File(currentPath);
 			files = f.listFiles();
 		}
-		myPath.setText(getText(R.string.location) + ": " + currentPath);
+		StringBuilder pathString = new StringBuilder(getText(R.string.location) + ": " + currentPath);
+		if(formatFilter != null) {
+			if(formatFilter.length > 0) {
+				pathString.append(" (");
+				for(int i = 0 ; i < formatFilter.length ; ++i) {
+					pathString.append(formatFilter[i]);
+					if(i != formatFilter.length - 1)
+						pathString.append(", ");
+				}
+				pathString.append(")");
+			}
+		}
+		myPath.setText(pathString.toString());
 
 		if (!currentPath.equals(ROOT)) {
 

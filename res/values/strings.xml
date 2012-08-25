@@ -54,4 +54,6 @@
     <string name="showtouchmsg">Show touch message</string>
     <string name="showtouchmsgdesc">Display a message to the user explaining touch/keypad mode switching.</string>
     
+    <!-- Release 3 -->
+    <string name="loading">Loading</string>    
 </resources>

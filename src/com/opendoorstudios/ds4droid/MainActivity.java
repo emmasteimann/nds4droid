@@ -24,6 +24,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
@@ -57,6 +59,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	NDSView view;
 	static final String TAG = "nds4droid";
 	static boolean touchScreenMode = false;
+	Dialog loadingDialog = null;
 	
 	Handler msgHandler = new Handler() {
 		
@@ -70,13 +73,48 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			case PICK_ROM:
 				pickRom();
 				break;
+			case LOADING_START:
+				if(loadingDialog == null) {
+					final String loadingMsg = getResources().getString(R.string.loading);
+					loadingDialog = ProgressDialog.show(MainActivity.this, null, loadingMsg, true);
+					break;
+				}
+				break;
+			case LOADING_END:
+				if(loadingDialog != null) {
+					loadingDialog.dismiss();
+					loadingDialog = null;
+				}
+				break;
+			case ROM_ERROR:
+				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+				builder.setMessage(R.string.rom_error).setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
+					
+					@Override
+					public void onClick(DialogInterface arg0, int arg1) {
+						arg0.dismiss();
+						pickRom();
+					}
+				}).setOnCancelListener(new OnCancelListener() {
+
+					@Override
+					public void onCancel(DialogInterface arg0) {
+						arg0.dismiss();
+						pickRom();
+					}
+					
+				});
+				builder.create().show();
 			}
 		}
 		
 	};
 	
-	static final int DRAW_SCREEN = 1337;
-	static final int PICK_ROM = 1338;
+	public static final int DRAW_SCREEN = 1337;
+	public static final int PICK_ROM = 1338;
+	public static final int LOADING_START = 1339;
+	public static final int LOADING_END = 1340;
+	public static final int ROM_ERROR = 1341;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -126,7 +164,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		Intent i = new Intent(this, FileDialog.class);
 		i.setAction(Intent.ACTION_PICK);
 		i.putExtra(FileDialog.START_PATH, Environment.getExternalStorageDirectory().getAbsolutePath());
-		i.putExtra(FileDialog.FORMAT_FILTER, new String[] {".nds"});
+		i.putExtra(FileDialog.FORMAT_FILTER, new String[] {".nds", ".zip", ".7z", ".rar"});
 		startActivityForResult(i, PICK_ROM);
 	}
 	

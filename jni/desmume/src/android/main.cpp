@@ -36,6 +36,7 @@
 #include "../saves.h"
 #include "throttle.h"
 #include "video.h"
+#include "OpenArchive.h"
 #ifdef HAVE_NEON
 #include "neontest.h"
 #endif
@@ -74,6 +75,7 @@ AndroidBitmapInfo bitmapInfo;
 EGLSurface surface;
 EGLContext context;
 const char* IniName = NULL;
+char androidTempPath[1024];
 
 extern "C" {
 
@@ -396,9 +398,9 @@ void nds4droid_unpause()
 	NDS_UnPause();
 }
 
-bool nds4droid_loadrom(const char* path)
+bool doRomLoad(const char* path, const char* logical)
 {
-	if(NDS_LoadROM(path, path) >= 0)
+	if(NDS_LoadROM(path, logical) >= 0)
 	{
 		INFO("Loading %s was successful\n",path);
 		nds4droid_unpause();
@@ -406,6 +408,18 @@ bool nds4droid_loadrom(const char* path)
 		return true;
 	}
 	return false;
+}
+
+bool nds4droid_loadrom(const char* path)
+{
+	char LogicalName[1024], PhysicalName[1024];
+
+	const char* s_nonRomExtensions [] = {"txt", "nfo", "htm", "html", "jpg", "jpeg", "png", "bmp", "gif", "mp3", "wav", "lnk", "exe", "bat", "gmv", "gm2", "lua", "luasav", "sav", "srm", "brm", "cfg", "wch", "gs*", "dst"};
+
+	if(!ObtainFile(path, LogicalName, PhysicalName, "rom", s_nonRomExtensions, ARRAY_SIZE(s_nonRomExtensions)))
+		return false;
+		
+	return doRomLoad(path, LogicalName);
 }
 
 void JNI(resize, jobject bitmap, int width, int height)
@@ -492,7 +506,7 @@ void JNI(init, jobject _inst)
 
 	extern bool windows_opengl_init();
 	oglrender_init = android_opengl_init;
-		
+	InitDecoder();
 	
 	path.ReadPathSettings();
 	if (video.layout > 2)
@@ -590,12 +604,16 @@ jboolean JNI(loadRom, jstring path)
 	return ret ? JNI_TRUE : JNI_FALSE;
 }
 
-void JNI(setWorkingDir, jstring path)
+void JNI(setWorkingDir, jstring path, jstring temp)
 {
 	jboolean isCopy; 
 	const char* szPath = env->GetStringUTFChars(path, &isCopy);
 	strncpy(PathInfo::pathToModule, szPath, MAX_PATH);
 	env->ReleaseStringUTFChars(path, szPath);
+	
+	szPath = env->GetStringUTFChars(temp, &isCopy);
+	strncpy(androidTempPath, szPath, 1024);
+	env->ReleaseStringUTFChars(temp, szPath);
 }
 
 void JNI(touchScreenTouch, int x, int y)

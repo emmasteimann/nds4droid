@@ -9,8 +9,10 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    		:= 	libdesmumeneon
 LOCAL_C_INCLUDES		:= 	$(LOCAL_PATH)/desmume/src \
-							$(LOCAL_PATH)/desmume/src/android/agg/include \
-							$(LOCAL_PATH)/desmume/src/android/7z/CPP/Common
+							$(LOCAL_PATH)/desmume/src/android \
+							$(LOCAL_PATH)/desmume/src/android/7z/CPP \
+							$(LOCAL_PATH)/desmume/src/android/7z/CPP/include_windows \
+							$(LOCAL_PATH)/desmume/src/android/agg/include
 						   
 LOCAL_SRC_FILES			:= 	desmume/src/aggdraw.cpp \
 							desmume/src/addons.cpp \
@@ -95,12 +97,14 @@ LOCAL_SRC_FILES			:= 	desmume/src/aggdraw.cpp \
 							desmume/src/android/mic.cpp \
 							desmume/src/android/throttle.cpp \
 							desmume/src/android/main.cpp \
+							desmume/src/android/OpenArchive.cpp \
+							desmume/src/android/7zip.cpp \
 							desmume/src/android/neontest.cpp
 							
 LOCAL_ARM_NEON 			:= true
 LOCAL_ARM_MODE 			:= arm
 LOCAL_CFLAGS			:= -DANDROID -DHAVE_LIBAGG -DHAVE_LIBZ -fexceptions -DHAVE_NEON=1 -march=armv6 -marm -mfloat-abi=softfp -mfpu=neon
-LOCAL_STATIC_LIBRARIES 	:= aggneon mathneon
+LOCAL_STATIC_LIBRARIES 	:= aggneon mathneon sevenzip
 LOCAL_LDLIBS 			:= -llog -lz -lGLESv1_CM -lEGL -ljnigraphics
 
 include $(BUILD_SHARED_LIBRARY)
