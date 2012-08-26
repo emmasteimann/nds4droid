@@ -1,6 +1,8 @@
     <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
         <ListPreference android:entries="@array/zerothroughnine" android:entryValues="@array/zerothroughnine" android:key="FrameSkip" android:title="@string/frameskip" android:summary="@string/frameskipdesc"/>
+        <ListPreference android:title="@string/filter" android:summary="@string/filterdesc" android:key="Filter" android:entryValues="@array/zerothroughseventeen" android:entries="@array/filternames"/>Filter
         <CheckBoxPreference android:title="@string/vsync" android:key="VSync" android:summary="@string/vsyncdesc"/>
         <CheckBoxPreference android:title="@string/fps" android:summary="@string/fpsdesc" android:key="DisplayFps"/>
         <CheckBoxPreference android:title="@string/showtouchmsg" android:summary="@string/showtouchmsgdesc" android:key="ShowTouchMessage"/>
+        
     </PreferenceScreen>

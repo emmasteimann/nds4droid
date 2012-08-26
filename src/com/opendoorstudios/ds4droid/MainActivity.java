@@ -40,6 +40,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Xfermode;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -128,7 +129,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		Settings.applyDefaults(this);
 		prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
 		prefs.registerOnSharedPreferenceChangeListener(this);
-		loadJavaSettings();
+		loadJavaSettings(null);
 		
 		if(!EmulatorThread.inited) 
 			pickRom();
@@ -173,8 +174,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		if(requestCode != PICK_ROM || resultCode != Activity.RESULT_OK)
 			return;
 		String romPath = data.getStringExtra(FileDialog.RESULT_PATH);
-		if(romPath != null) 
+		if(romPath != null) {
+			runEmulation();
 			coreThread.loadRom(romPath);
+		}
+			
 	}
 	
 	@Override
@@ -254,8 +258,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	}
 
 	
-	
-	
 	static final int BUTTON_RIGHT = 0;
 	static final int BUTTON_DOWN = 1;
 	static final int BUTTON_UP = 2;
@@ -278,17 +280,24 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
 		if(EmulatorThread.inited)
 			DeSmuME.loadSettings();
-		loadJavaSettings();
+		loadJavaSettings(key);
 			
 	}
 	
-	void loadJavaSettings()
+	void loadJavaSettings(String key)
 	{
 		if(view != null) {
 			view.showTouchMessage = prefs.getBoolean(Settings.SHOW_TOUCH_MESSAGE, true);
 			view.vsync = prefs.getBoolean(Settings.VSYNC, true);
+			
+			if(key != null && key.equals("Filter")) {
+				int newFilter = DeSmuME.getSettingInt(Settings.SCREEN_FILTER, 0);
+				DeSmuME.setFilter(newFilter);
+				view.forceResize();
+			}
 		}
 	}
 	
@@ -314,13 +323,18 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			
 		}
 		
+		boolean doForceResize = false;
+		public void forceResize() {
+			doForceResize = true;
+		}
+		
 		@Override
 		public void onDraw(Canvas canvas) {
 			
 			if(!EmulatorThread.inited)
 				return;
 			
-			if(width != canvas.getWidth() || height != canvas.getHeight())
+			if(width != canvas.getWidth() || height != canvas.getHeight() || doForceResize)
 				resize(canvas.getWidth(), canvas.getHeight());
 			
 			if(emuBitmap == null)
@@ -381,11 +395,12 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			{
 				if(!sized)
 					return false;
-				switch(event.getAction()) {
+				switch(event.getActionMasked()) {
 				case MotionEvent.ACTION_MOVE:
 				case MotionEvent.ACTION_DOWN:
-
-					for(int i = 0 ; i < event.getPointerCount() ; ++i) {
+				case MotionEvent.ACTION_POINTER_DOWN:
+				{
+						int i = event.getActionIndex();
 						int id = event.getPointerId(i);
 						
 						int existingTouch = touchMap.get(id, -1);
@@ -426,21 +441,23 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 							break;
 						}
 						else
-							continue;
+							break;
 						
 						buttonStates[touchMap.get(id)] = 1;
-					}
+				}
 					break;
 				case MotionEvent.ACTION_UP:
 				case MotionEvent.ACTION_CANCEL:
-					for(int i = 0 ; i < event.getPointerCount() ; ++i) {
-						int id = event.getPointerId(i);
-						int button = touchMap.get(id, -1);
-						if(button == -1)
-							continue;
-						buttonStates[button] = 0;
-						touchMap.delete(id);
-					}
+				case MotionEvent.ACTION_POINTER_UP:
+				{
+					int i = event.getActionIndex();
+					int id = event.getPointerId(i);
+					int button = touchMap.get(id, -1);
+					if(button == -1)
+						break;
+					buttonStates[button] = 0;
+					touchMap.delete(id);
+				}
 					break;
 				default:
 					return false;
@@ -465,14 +482,14 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		void resize(int newWidth, int newHeight) {
 			
 			//TODO: Use desmume resizing if desired as well as landscape mode
-			sourceWidth = 256;
-			sourceHeight = 384;
+			sourceWidth = DeSmuME.getNativeWidth();
+			sourceHeight = DeSmuME.getNativeHeight();
 			resized = true;
 			src = new Rect(0, 0, sourceWidth, sourceHeight);
 			dest = new Rect(0, 0, newWidth, newHeight);
 			
-			xscale = (float)dest.width() / (float)sourceWidth;
-			yscale = (float)dest.height() / (float)sourceHeight;
+			xscale = (float)dest.width() / 256.0f;
+			yscale = (float)dest.height() / 384.0f;
 			
 			Bitmap originalControls = BitmapFactory.decodeResource(getResources(), R.drawable.dscontrols);
 			controls = Bitmap.createScaledBitmap(originalControls, dest.width(), dest.height(), true);
@@ -498,10 +515,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			selectrect = new Rect((int)(400 * controlxscale), (int)(1082 * controlyscale), (int)(485 * controlxscale), (int)(1152 * controlyscale));
 			
 			emuBitmap = Bitmap.createBitmap(sourceWidth, sourceHeight, Config.ARGB_8888);
-			DeSmuME.resize(emuBitmap, sourceWidth, sourceHeight);
+			DeSmuME.resize(emuBitmap);
 			width = newWidth;
 			height = newHeight;
 			sized = true;
+			doForceResize = false;
 		}
 		
 	}

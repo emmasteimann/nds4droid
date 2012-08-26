@@ -48,7 +48,7 @@ class DeSmuME {
 	static native void init();
 	static native int runCore();
 	static native void runOther();
-	static native void resize(Bitmap bitmap, int width, int height);
+	static native void resize(Bitmap bitmap);
 	static native void draw(Bitmap bitmap);
 	static native void touchScreenTouch(int x, int y);
 	static native void touchScreenRelease();
@@ -58,6 +58,9 @@ class DeSmuME {
 	static native void saveState(int slot);
 	static native void restoreState(int slot);
 	static native void loadSettings();
+	static native int getNativeWidth();
+	static native int getNativeHeight();
+	static native void setFilter(int index);
 	
 	public static int getSettingInt(String name, int def)
 	{

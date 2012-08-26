@@ -36,6 +36,7 @@ public class Settings extends PreferenceActivity {
 	public static final String VSYNC = "VSync";
 	public static final String SHOW_FPS = "DisplayFps";
 	public static final String FRAME_SKIP = "FrameSkip";
+	public static final String SCREEN_FILTER = "Filter";
 	
 	public static void applyDefaults(Context context) {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);

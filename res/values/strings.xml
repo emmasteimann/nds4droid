@@ -33,18 +33,6 @@
     
     <!-- Release 2 -->
     <string name="touchnotify">To toggle between touch mode and keypad mode, tap the "touch" button at the top</string>
-    <string-array name="zerothroughnine">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>5</item>
-        <item>6</item>
-        <item>7</item>
-        <item>8</item>
-        <item>9</item>
-    </string-array>
     <string name="frameskip">Frame skip</string>
     <string name="frameskipdesc">How many frames to skip when emulating. Helps make slow emulation match real time.</string>
     <string name="vsync">VSync</string>
@@ -56,4 +44,65 @@
     
     <!-- Release 3 -->
     <string name="loading">Loading</string>    
+    
+    <!-- Release 4 -->
+    <string name="filter">Screen filter</string>
+    <string name="filterdesc">Filter to use when upscaling from Nintendo DS resolution to your sceren. Higher quality filters may degrade performance.</string>
+    
+    <!-- No need to translate -->
+    <string-array name="filternames">
+        <item>Normal</item>
+		<item>HQ2x</item>
+		<item>2XSaI</item>
+		<item>Super2XSaI</item>
+		<item>SuperEagle</item>
+		<item>Scanline</item>
+		<item>Bilinear</item>
+		<item>Nearest 2X</item>
+		<item>HQ2xS</item>
+		<item>LQ2x</item>
+		<item>LQ2xS</item>
+        <item>EPX</item>
+        <item>Nearest+ 1.5X</item>
+        <item>Nearest 1.5X</item>
+        <item>EPX+</item>
+        <item>EPX 1.5X</item>
+        <item>EPX+ 1.5X</item>
+        <item>HQ4x</item>
+    </string-array>
+        <string-array name="zerothroughnine">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+    </string-array>
+    
+    <string-array name="zerothroughseventeen">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+        <item>15</item>
+        <item>16</item>
+        <item>17</item>
+    </string-array>
+
+    
 </resources>

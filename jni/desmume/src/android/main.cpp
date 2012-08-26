@@ -182,7 +182,7 @@ void JNI(draw, jobject bitmap)
 	const int size = video.size();
 	u16* src = (u16*)video.srcBuffer;
 	for(int i=0;i<size;i++)
- 		video.buffer[i] = RGB15TO32(src[i], 0xFF);
+ 		video.buffer[i] = 0xFF000000 | RGB15TO32_NOALPHA(src[i]);
 	
 
 	aggDraw.hud->attach((u8*)video.buffer, 256, 384, 1024);
@@ -200,10 +200,25 @@ void JNI(draw, jobject bitmap)
 		int height = video.height;
 		int width = video.width;
 		int stride = bitmapInfo.stride;
-		for(int y = 0 ; y < height ; ++y)
+		if(video.currentfilter == VideoInfo::NONE)
 		{
-			memcpy(dest, &src[y * width], width * sizeof(u32));
-			dest += bitmapInfo.stride;
+			for(int y = 0 ; y < height ; ++y)
+			{
+				memcpy(dest, &src[y * width], width * sizeof(u32));
+				dest += bitmapInfo.stride;
+			}
+		}
+		else
+		{
+			//the alpha channels are screwy because of interpolation
+			//we need to go pixel by pixel and clear them
+			for(int y = 0 ; y < height ; ++y)
+			{
+				u32* destline = (u32*)dest;
+				for(int x = 0 ; x < width ; ++x)
+					*destline++ = 0xFF000000 | *src++;
+				dest += bitmapInfo.stride;
+			}
 		}
 		AndroidBitmap_unlockPixels(env, bitmap);
 	}
@@ -422,13 +437,26 @@ bool nds4droid_loadrom(const char* path)
 	return doRomLoad(path, LogicalName);
 }
 
-void JNI(resize, jobject bitmap, int width, int height)
+void JNI(resize, jobject bitmap)
 {
 	osd->singleScreen = (video.layout == 2);
-	video.width = width;
-	video.height = height;
 	//video.setfilter(VideoInfo::SUPER2XSAI);
 	AndroidBitmap_getInfo(env, bitmap, &bitmapInfo);
+}
+
+int JNI_NOARGS(getNativeWidth)
+{
+	return video.width;
+}
+
+int JNI_NOARGS(getNativeHeight)
+{
+	return video.height;
+}
+
+void JNI(setFilter, int index)
+{
+	video.setfilter(index);
 }
 
 int JNI_NOARGS(runCore)
