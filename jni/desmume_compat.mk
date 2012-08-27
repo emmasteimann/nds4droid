@@ -98,13 +98,14 @@ LOCAL_SRC_FILES			:= 	desmume/src/aggdraw.cpp \
 							desmume/src/android/throttle.cpp \
 							desmume/src/android/main.cpp \
 							desmume/src/android/OpenArchive.cpp \
-							desmume/src/android/7zip.cpp
+							desmume/src/android/7zip.cpp \
+							desmume/src/android/sndopensl.cpp
 							
 LOCAL_ARM_MODE 			:= thumb
 LOCAL_ARM_NEON 			:= false
 LOCAL_CFLAGS			:= -DANDROID -DHAVE_LIBAGG -DHAVE_LIBZ -fexceptions
 LOCAL_STATIC_LIBRARIES 	:= aggcompat sevenzip
-LOCAL_LDLIBS 			:= -llog -lz -lGLESv1_CM -lEGL -ljnigraphics
+LOCAL_LDLIBS 			:= -llog -lz -lGLESv1_CM -lEGL -ljnigraphics -lOpenSLES
 
 include $(BUILD_SHARED_LIBRARY)
 

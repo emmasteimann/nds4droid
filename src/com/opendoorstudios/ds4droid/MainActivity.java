@@ -17,11 +17,6 @@ package com.opendoorstudios.ds4droid;
 	along with the this software.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import java.io.File;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -40,7 +35,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.Xfermode;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -53,6 +47,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 
 public class MainActivity extends Activity implements OnSharedPreferenceChangeListener {
 
@@ -292,11 +287,24 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		if(view != null) {
 			view.showTouchMessage = prefs.getBoolean(Settings.SHOW_TOUCH_MESSAGE, true);
 			view.vsync = prefs.getBoolean(Settings.VSYNC, true);
+			view.showSoundMessage = prefs.getBoolean(Settings.SHOW_SOUND_MESSAGE, true);
 			
-			if(key != null && key.equals("Filter")) {
-				int newFilter = DeSmuME.getSettingInt(Settings.SCREEN_FILTER, 0);
-				DeSmuME.setFilter(newFilter);
-				view.forceResize();
+			if(key != null) {
+				if(key.equals(Settings.SCREEN_FILTER)) {
+					int newFilter = DeSmuME.getSettingInt(Settings.SCREEN_FILTER, 0);
+					DeSmuME.setFilter(newFilter);
+					view.forceResize();
+				}
+				else if(key.equals(Settings.RENDERER)) {
+					int new3D = DeSmuME.getSettingInt(Settings.RENDERER, 2);
+					if(coreThread != null)
+						coreThread.change3D(new3D);
+				}
+				else if(key.equals(Settings.ENABLE_SOUND)) {
+					int newSound = DeSmuME.getSettingInt(Settings.ENABLE_SOUND, 0);
+					if(coreThread != null)
+						coreThread.changeSound(newSound);
+				}
 			}
 		}
 	}
@@ -311,6 +319,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		final Paint emuPaint = new Paint();
 		
 		public boolean showTouchMessage = false;
+		public boolean showSoundMessage = false;
 		public boolean vsync = true;
 		
 		public NDSView(Context context) {
@@ -342,11 +351,12 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 
 			if(vsync) {
 				coreThread.inFrameLock.lock();
-					DeSmuME.draw(emuBitmap);
+					DeSmuME.copyMasterBuffer();
 				coreThread.inFrameLock.unlock();
 			}
 			else
-				DeSmuME.draw(emuBitmap);
+				DeSmuME.copyMasterBuffer();
+			DeSmuME.draw(emuBitmap);
 			
 			canvas.drawBitmap(emuBitmap, src, dest, null);
 			if(touchScreenMode)
@@ -358,6 +368,20 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				prefs.edit().putBoolean(Settings.SHOW_TOUCH_MESSAGE, showTouchMessage = false).apply();
 				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 				builder.setPositiveButton(R.string.OK, null).setMessage(R.string.touchnotify).create().show();
+			}
+			
+			if(showSoundMessage) {
+				prefs.edit().putBoolean(Settings.SHOW_SOUND_MESSAGE, showSoundMessage = false).apply();
+				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+				builder.setMessage(R.string.soundmsg).setPositiveButton(R.string.yes, new Dialog.OnClickListener() {
+
+					@Override
+					public void onClick(DialogInterface arg0, int arg1) {
+						prefs.edit().putBoolean(Settings.ENABLE_SOUND, true).apply();
+						arg0.dismiss();
+					}
+					
+				}).setNegativeButton(R.string.no, null).create().show();
 			}
 		}
 		

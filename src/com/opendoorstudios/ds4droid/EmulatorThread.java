@@ -5,10 +5,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 
@@ -25,17 +21,28 @@ class EmulatorThread extends Thread {
 	
 	public static boolean inited = false;
 	public static boolean romLoaded = false;
+	boolean soundPaused = true;
 	
 	long lastDraw = 0;
 	final AtomicBoolean finished = new AtomicBoolean(false);
 	final AtomicBoolean paused = new AtomicBoolean(false);
 	String pendingRomLoad = null;
+	Integer pending3DChange = null;
+	Integer pendingSoundChange = null;
 	
 	public void loadRom(String path) {
 		pendingRomLoad = path;
 		synchronized(dormant) {
 			dormant.notifyAll();
 		}
+	}
+	
+	public void change3D(int set) {
+		pending3DChange = set;
+	}
+	
+	public void changeSound(int set) {
+		pendingSoundChange = set;
 	}
 	
 	public void setCancel(boolean set) {
@@ -47,6 +54,10 @@ class EmulatorThread extends Thread {
 	
 	public void setPause(boolean set) {
 		paused.set(set);
+		if(inited) {
+			DeSmuME.setSoundPaused(set ? 1 : 0);
+			soundPaused = set;
+		}
 		synchronized(dormant) {
 			dormant.notifyAll();
 		}
@@ -89,22 +100,34 @@ class EmulatorThread extends Thread {
 				else {
 					activity.msgHandler.sendEmptyMessage(MainActivity.LOADING_END);
 					romLoaded = true;
-					paused.set(false);
+					setPause(false);
 				}
 				pendingRomLoad = null;
+			}
+			if(pending3DChange != null) {
+				DeSmuME.change3D(pending3DChange.intValue());
+				pending3DChange = null;
+			}
+			if(pendingSoundChange != null) {
+				DeSmuME.changeSound(pendingSoundChange.intValue());
+				pendingSoundChange = null;
 			}
 			
 			if(!paused.get()) {
 				
-				inFrameLock.lock();
-				fps = DeSmuME.runCore();
-				inFrameLock.unlock();
-				DeSmuME.runOther();
-				
-				if(System.currentTimeMillis() - lastDraw > (1000/fps)) {
-					activity.msgHandler.sendEmptyMessage(MainActivity.DRAW_SCREEN);
-					lastDraw = System.currentTimeMillis();
+				if(soundPaused) {
+					DeSmuME.setSoundPaused(0);
+					soundPaused = false;
 				}
+				
+				inFrameLock.lock();
+				DeSmuME.runCore();
+				inFrameLock.unlock();
+				fps = DeSmuME.runOther();
+				
+
+				activity.msgHandler.sendEmptyMessage(MainActivity.DRAW_SCREEN);
+		
 				
 			} 
 			else {

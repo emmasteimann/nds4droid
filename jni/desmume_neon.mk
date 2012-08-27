@@ -99,13 +99,14 @@ LOCAL_SRC_FILES			:= 	desmume/src/aggdraw.cpp \
 							desmume/src/android/main.cpp \
 							desmume/src/android/OpenArchive.cpp \
 							desmume/src/android/7zip.cpp \
-							desmume/src/android/neontest.cpp
+							desmume/src/android/neontest.cpp \
+							desmume/src/android/sndopensl.cpp
 							
 LOCAL_ARM_NEON 			:= true
 LOCAL_ARM_MODE 			:= arm
 LOCAL_CFLAGS			:= -DANDROID -DHAVE_LIBAGG -DHAVE_LIBZ -fexceptions -DHAVE_NEON=1 -march=armv6 -marm -mfloat-abi=softfp -mfpu=neon
 LOCAL_STATIC_LIBRARIES 	:= aggneon mathneon sevenzip
-LOCAL_LDLIBS 			:= -llog -lz -lGLESv1_CM -lEGL -ljnigraphics
+LOCAL_LDLIBS 			:= -llog -lz -lGLESv1_CM -lEGL -ljnigraphics -lOpenSLES
 
 include $(BUILD_SHARED_LIBRARY)
 

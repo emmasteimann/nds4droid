@@ -1407,7 +1407,7 @@ void SPU_Emulate_core()
 void SPU_Emulate_user(bool mix)
 {
 #ifdef ANDROID
-	return; //for now, disable all sound
+	//return; //for now, disable all sound
 #endif
 	u32 audiosize;
 

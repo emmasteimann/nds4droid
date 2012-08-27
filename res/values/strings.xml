@@ -49,7 +49,23 @@
     <string name="filter">Screen filter</string>
     <string name="filterdesc">Filter to use when upscaling from Nintendo DS resolution to your sceren. Higher quality filters may degrade performance.</string>
     
-    <!-- No need to translate -->
+    <!-- Release 5 -->
+    <string name="threedrenderer">3D Renderer</string>
+    <string name="threedrendererdesc">Which 3D rendering engine to use.</string>
+    <string-array name ="threed_options">
+        <item>None</item>
+        <item>OpenGL</item>
+        <item>Software</item>
+    </string-array>
+    <string name="sound">Enable sound</string>
+    <string name="sounddesc">Enable processing and playback of audio. Disabling can increase performance.</string>
+    <string name="showsoundmsg">Show sound message</string>
+    <string name="showsoundmsgdesc">Display a question to the user asking if they would like to enable sound.</string>
+    <string name="soundmsg">Would you like to enable sound? This can cause a 3 to 5 FPS performance loss.</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    
+    <!-- Do not translate -->
     <string-array name="filternames">
         <item>Normal</item>
 		<item>HQ2x</item>
@@ -82,7 +98,6 @@
         <item>8</item>
         <item>9</item>
     </string-array>
-    
     <string-array name="zerothroughseventeen">
         <item>0</item>
         <item>1</item>
@@ -103,6 +118,10 @@
         <item>16</item>
         <item>17</item>
     </string-array>
-
+   	<string-array name="zerothroughtwo">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
     
 </resources>

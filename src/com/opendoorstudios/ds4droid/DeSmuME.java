@@ -46,8 +46,8 @@ class DeSmuME {
 	
 	static native boolean useNeon();
 	static native void init();
-	static native int runCore();
-	static native void runOther();
+	static native void runCore();
+	static native int runOther();
 	static native void resize(Bitmap bitmap);
 	static native void draw(Bitmap bitmap);
 	static native void touchScreenTouch(int x, int y);
@@ -61,6 +61,10 @@ class DeSmuME {
 	static native int getNativeWidth();
 	static native int getNativeHeight();
 	static native void setFilter(int index);
+	static native void copyMasterBuffer();
+	static native void change3D(int set);
+	static native void changeSound(int set);
+	static native void setSoundPaused(int set);
 	
 	public static int getSettingInt(String name, int def)
 	{

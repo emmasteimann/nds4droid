@@ -37,6 +37,7 @@
 #include "throttle.h"
 #include "video.h"
 #include "OpenArchive.h"
+#include "sndopensl.h"
 #ifdef HAVE_NEON
 #include "neontest.h"
 #endif
@@ -55,6 +56,7 @@ GPU3DInterface *core3DList[] = {
 
 SoundInterface_struct *SNDCoreList[] = {
 	&SNDDummy,
+	&SNDOpenSL,
 	NULL
 };
 
@@ -71,6 +73,7 @@ bool continuousframeAdvancing = false;
 bool staterewindingenabled = false;
 struct NDS_fw_config_data fw_config;
 bool FrameLimit = true;
+int sndcoretype, sndbuffersize;
 AndroidBitmapInfo bitmapInfo;
 EGLSurface surface;
 EGLContext context;
@@ -166,13 +169,7 @@ static void DoDisplay_DrawHud()
 	osd->clear();
 }
 
-float triangles[] = {
-		0, 0, 0,
-		0, 200, 0,
-		100, 200, 0,
-};
-
-void JNI(draw, jobject bitmap)
+void JNI_NOARGS(copyMasterBuffer)
 {
 	video.srcBuffer = (u8*)GPU_screen;
 	
@@ -183,8 +180,10 @@ void JNI(draw, jobject bitmap)
 	u16* src = (u16*)video.srcBuffer;
 	for(int i=0;i<size;i++)
  		video.buffer[i] = 0xFF000000 | RGB15TO32_NOALPHA(src[i]);
-	
+}
 
+void JNI(draw, jobject bitmap)
+{
 	aggDraw.hud->attach((u8*)video.buffer, 256, 384, 1024);
 	DoDisplay_DrawHud();
 	
@@ -202,6 +201,8 @@ void JNI(draw, jobject bitmap)
 		int stride = bitmapInfo.stride;
 		if(video.currentfilter == VideoInfo::NONE)
 		{
+			if(bitmapInfo.stride == width * sizeof(u32)) //bitmap is the same size, we can do one massive memcpy
+				memcpy(dest, src, width * height * sizeof(u32));
 			for(int y = 0 ; y < height ; ++y)
 			{
 				memcpy(dest, &src[y * width], width * sizeof(u32));
@@ -399,9 +400,6 @@ void nds4droid_core()
 	NDS_beginProcessingInput();
 	NDS_endProcessingInput();
 	NDS_exec<false>();
-	//disable sound
-	//SPU_Emulate_user();
-		
 }
 
 
@@ -459,24 +457,30 @@ void JNI(setFilter, int index)
 	video.setfilter(index);
 }
 
-int JNI_NOARGS(runCore)
+void JNI_NOARGS(runCore)
+{
+	if(execute)
+		nds4droid_core();
+}
+
+void JNI(setSoundPaused, int set)
+{
+	if(sndcoretype != 1)
+		return;
+	SNDOpenSLPaused(set == 0 ? false : true);
+}
+
+int JNI_NOARGS(runOther)
 {
 	if(execute)
 	{
-		nds4droid_core();
+		if(sndcoretype != 0)
+			SPU_Emulate_user();
+		nds4droid_user();
+		nds4droid_throttle();
 		return mainLoopData.fps > 0 ? mainLoopData.fps : 1;
 	}
 	return 1;
-
-}
-
-void JNI_NOARGS(runOther)
-{
-	if(execute)
-	{
-		nds4droid_user();
-		nds4droid_throttle();
-	}
 }
 
 void JNI(saveState, int slot)
@@ -491,7 +495,7 @@ void JNI(restoreState, int slot)
 
 void loadSettings(JNIEnv* env)
 {
-	CommonSettings.num_cores = 1;
+	CommonSettings.num_cores = sysconf( _SC_NPROCESSORS_ONLN );
 	CommonSettings.advanced_timing = false;
 	CommonSettings.cheatsDisable = GetPrivateProfileBool(env,"General", "cheatsDisable", false, IniName);
 	CommonSettings.autodetectBackupMethod = GetPrivateProfileInt(env,"General", "autoDetectMethod", 0, IniName);
@@ -516,6 +520,7 @@ void loadSettings(JNIEnv* env)
 	CommonSettings.wifi.mode = GetPrivateProfileInt(env,"Wifi", "Mode", 0, IniName);
 	CommonSettings.wifi.infraBridgeAdapter = GetPrivateProfileInt(env,"Wifi", "BridgeAdapter", 0, IniName);
 	frameskiprate = GetPrivateProfileInt(env,"Display", "FrameSkip", 1, IniName);
+	CommonSettings.spuInterpolationMode = (SPUInterpolationMode)GetPrivateProfileInt(env, "Sound","SPUInterpolation", 1, IniName);
 }
 
 void JNI_NOARGS(loadSettings)
@@ -599,9 +604,13 @@ void JNI(init, jobject _inst)
 	NDS_Init();
 	
 	osd->singleScreen = true;
-	NDS_3D_ChangeCore(cur3DCore = 1); //OpenGL
+	cur3DCore = GetPrivateProfileInt(env, "3D", "Renderer", 1, IniName);
+	NDS_3D_ChangeCore(cur3DCore); //OpenGL
 	
 	LOG("Init sound core\n");
+	sndcoretype = GetPrivateProfileInt(env, "Sound","SoundCore2", SNDCORE_OPENSL, IniName);
+	sndbuffersize = GetPrivateProfileInt(env, "Sound","SoundBufferSize2", DESMUME_SAMPLE_RATE*8/60, IniName);
+	SPU_ChangeSoundCore(sndcoretype, sndbuffersize);
 	
 	static const char* nickname = "emozilla";
 	fw_config.nickname_len = strlen(nickname);
@@ -621,6 +630,16 @@ void JNI(init, jobject _inst)
 	
 	mainLoopData.freq = 1000;
 	mainLoopData.lastticks = GetTickCount();
+}
+
+void JNI(change3D, int type)
+{
+	NDS_3D_ChangeCore(cur3DCore = type);
+}
+
+void JNI(changeSound, int type)
+{
+	SPU_ChangeSoundCore(sndcoretype = type, sndbuffersize);
 }
 
 jboolean JNI(loadRom, jstring path)
