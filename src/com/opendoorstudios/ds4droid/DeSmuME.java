@@ -66,6 +66,10 @@ class DeSmuME {
 	static native void changeSound(int set);
 	static native void setSoundPaused(int set);
 	
+	static boolean touchScreenMode = false;
+	static boolean inited = false;
+	static boolean romLoaded = false;
+	
 	public static int getSettingInt(String name, int def)
 	{
 		SharedPreferences pm = PreferenceManager.getDefaultSharedPreferences(context);

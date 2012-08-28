@@ -46,15 +46,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
+import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
-import android.view.View;
 
 public class MainActivity extends Activity implements OnSharedPreferenceChangeListener {
 
 	static EmulatorThread coreThread;
 	NDSView view;
 	static final String TAG = "nds4droid";
-	static boolean touchScreenMode = false;
 	Dialog loadingDialog = null;
 	
 	Handler msgHandler = new Handler() {
@@ -64,7 +63,12 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		void dispatchMessage(Message msg) {
 			switch(msg.what) {
 			case DRAW_SCREEN:		
-				view.invalidate();
+				//view.invalidate();
+				if(view.drawingThread != null ) {
+					view.drawingThread.drawEventLock.lock();
+					view.drawingThread.drawEvent.signal();
+					view.drawingThread.drawEventLock.unlock();
+				}
 				break;
 			case PICK_ROM:
 				pickRom();
@@ -126,7 +130,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		prefs.registerOnSharedPreferenceChangeListener(this);
 		loadJavaSettings(null);
 		
-		if(!EmulatorThread.inited) 
+		if(!DeSmuME.inited) 
 			pickRom();
 		
 	}
@@ -145,7 +149,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		}
 		else
 			coreThread.setCurrentActivity(this);
-		coreThread.setPause(!EmulatorThread.romLoaded);
+		coreThread.setPause(!DeSmuME.romLoaded);
 		if(created)
 			coreThread.start();
 	}
@@ -237,7 +241,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	}
 	
 	void restoreState(int slot) {
-		if(EmulatorThread.romLoaded) {
+		if(DeSmuME.romLoaded) {
 			coreThread.inFrameLock.lock();
 				DeSmuME.restoreState(slot);
 			coreThread.inFrameLock.unlock();
@@ -245,7 +249,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	}
 	
 	void saveState(int slot) {
-		if(EmulatorThread.romLoaded) {
+		if(DeSmuME.romLoaded) {
 			coreThread.inFrameLock.lock();
 				DeSmuME.saveState(slot);
 			coreThread.inFrameLock.unlock();
@@ -276,7 +280,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 
-		if(EmulatorThread.inited)
+		if(DeSmuME.inited)
 			DeSmuME.loadSettings();
 		loadJavaSettings(key);
 			
@@ -309,12 +313,14 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		}
 	}
 	
-	class NDSView extends SurfaceView {
+	
+	class NDSView extends SurfaceView implements Callback {
 
 		SurfaceHolder surfaceHolder;
 		Bitmap emuBitmap;
 		Bitmap controls;
 		Bitmap touchControls;
+		DrawingThread drawingThread;
 		final Paint controlsPaint = new Paint();
 		final Paint emuPaint = new Paint();
 		
@@ -325,7 +331,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		public NDSView(Context context) {
 			super(context);
 			surfaceHolder = getHolder();
-			
+			surfaceHolder.addCallback(this);
 			setKeepScreenOn(true);
 			setWillNotDraw(false);
 			controlsPaint.setAlpha(200);
@@ -337,32 +343,10 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			doForceResize = true;
 		}
 		
+		
+		
 		@Override
 		public void onDraw(Canvas canvas) {
-			
-			if(!EmulatorThread.inited)
-				return;
-			
-			if(width != canvas.getWidth() || height != canvas.getHeight() || doForceResize)
-				resize(canvas.getWidth(), canvas.getHeight());
-			
-			if(emuBitmap == null)
-				return;
-
-			if(vsync) {
-				coreThread.inFrameLock.lock();
-					DeSmuME.copyMasterBuffer();
-				coreThread.inFrameLock.unlock();
-			}
-			else
-				DeSmuME.copyMasterBuffer();
-			DeSmuME.draw(emuBitmap);
-			
-			canvas.drawBitmap(emuBitmap, src, dest, null);
-			if(touchScreenMode)
-				canvas.drawBitmap(touchControls, 0, 0, controlsPaint);
-			else
-				canvas.drawBitmap(controls, 0, 0, controlsPaint);
 			
 			if(showTouchMessage) {
 				prefs.edit().putBoolean(Settings.SHOW_TOUCH_MESSAGE, showTouchMessage = false).apply();
@@ -383,6 +367,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 					
 				}).setNegativeButton(R.string.no, null).create().show();
 			}
+			
 		}
 		
 		
@@ -390,15 +375,12 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		public boolean onTouchEvent(MotionEvent event) {
 			if(xscale == 0 || yscale == 0)
 				return false;
-			if(touchScreenMode) {
+			if(DeSmuME.touchScreenMode) {
 				switch(event.getAction()) {
 				case MotionEvent.ACTION_DOWN:
+				case MotionEvent.ACTION_MOVE:
 					float x = event.getX();
 					float y = event.getY();
-					if(touchrect.contains((int)x, (int)y)) {
-						touchScreenMode = false;
-						break;
-					}
 					x /= xscale;
 					y /= yscale;
 					//convert to bottom touch screen coordinates
@@ -409,6 +391,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				case MotionEvent.ACTION_UP:
 				case MotionEvent.ACTION_CANCEL:
 					DeSmuME.touchScreenRelease();
+					if(touchrect.contains((int)event.getX(), (int)event.getY())) {
+						DeSmuME.touchScreenMode = false;
+					}
 					break;
 				default:
 					return false;
@@ -420,9 +405,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				if(!sized)
 					return false;
 				switch(event.getActionMasked()) {
-				case MotionEvent.ACTION_MOVE:
 				case MotionEvent.ACTION_DOWN:
 				case MotionEvent.ACTION_POINTER_DOWN:
+				case MotionEvent.ACTION_MOVE:
 				{
 						int i = event.getActionIndex();
 						int id = event.getPointerId(i);
@@ -459,11 +444,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 							touchMap.put(id, BUTTON_START);
 						else if(selectrect.contains(x, y)) 
 							touchMap.put(id, BUTTON_SELECT);
-						else if(touchrect.contains(x, y)) {
-							touchScreenMode = true;
-							touchMap.clear();
-							break;
-						}
 						else
 							break;
 						
@@ -471,8 +451,14 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				}
 					break;
 				case MotionEvent.ACTION_UP:
-				case MotionEvent.ACTION_CANCEL:
 				case MotionEvent.ACTION_POINTER_UP:
+					if(touchrect.contains((int)event.getX(), (int)event.getY())) {
+						DeSmuME.touchScreenMode = true;
+						touchMap.clear();
+						break;
+					}
+					//FT
+				case MotionEvent.ACTION_CANCEL:
 				{
 					int i = event.getActionIndex();
 					int id = event.getPointerId(i);
@@ -505,45 +491,74 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 
 		void resize(int newWidth, int newHeight) {
 			
-			//TODO: Use desmume resizing if desired as well as landscape mode
-			sourceWidth = DeSmuME.getNativeWidth();
-			sourceHeight = DeSmuME.getNativeHeight();
-			resized = true;
-			src = new Rect(0, 0, sourceWidth, sourceHeight);
-			dest = new Rect(0, 0, newWidth, newHeight);
+			synchronized(view.surfaceHolder) {
+				//TODO: Use desmume resizing if desired as well as landscape mode
+				sourceWidth = DeSmuME.getNativeWidth();
+				sourceHeight = DeSmuME.getNativeHeight();
+				resized = true;
+				src = new Rect(0, 0, sourceWidth, sourceHeight);
+				dest = new Rect(0, 0, newWidth, newHeight);
+				
+				xscale = (float)dest.width() / 256.0f;
+				yscale = (float)dest.height() / 384.0f;
+				
+				Bitmap originalControls = BitmapFactory.decodeResource(getResources(), R.drawable.dscontrols);
+				controls = Bitmap.createScaledBitmap(originalControls, dest.width(), dest.height(), true);
+				
+				Bitmap originalTouchControls = BitmapFactory.decodeResource(getResources(), R.drawable.dscontrolstouch);
+				touchControls = Bitmap.createScaledBitmap(originalTouchControls, dest.width(), dest.height(), true);
+				
+				float controlxscale = (float)dest.width() / (float)originalControls.getWidth();
+				float controlyscale = (float)dest.height() / (float)originalControls.getHeight();
+				
+				lrect = new Rect((int)(0 * controlxscale), (int)(0 * controlyscale), (int)(160 * controlxscale), (int)(90 * controlyscale));
+				rrect = new Rect((int)(610 * controlxscale), (int)(0 * controlyscale), (int)(768 * controlxscale), (int)(90 * controlyscale));
+				touchrect = new Rect((int)(320 * controlxscale), (int)(0 * controlyscale), (int)(430 * controlxscale), (int)(60 * controlyscale));
+				leftrect = new Rect((int)(0 * controlxscale), (int)(915 * controlyscale), (int)(110 * controlxscale), (int)(1015 * controlyscale));
+				uprect = new Rect((int)(111 * controlxscale), (int)(810 * controlyscale), (int)(221 * controlxscale), (int)(914 * controlyscale));
+				rightrect = new Rect((int)(222 * controlxscale), (int)(915 * controlyscale), (int)(333 * controlxscale), (int)(1015 * controlyscale));
+				downrect = new Rect((int)(111 * controlxscale), (int)(1016 * controlyscale), (int)(221 * controlxscale), (int)(1116 * controlyscale));
+				arect = new Rect((int)(639 * controlxscale), (int)(895 * controlyscale), (int)(768 * controlxscale), (int)(1026 * controlyscale));
+				brect = new Rect((int)(521 * controlxscale), (int)(995 * controlyscale), (int)(639 * controlxscale), (int)(1118 * controlyscale));
+				yrect = new Rect((int)(397 * controlxscale), (int)(895 * controlyscale), (int)(517 * controlxscale), (int)(1026 * controlyscale));
+				xrect = new Rect((int)(521 * controlxscale), (int)(805 * controlyscale), (int)(639 * controlxscale), (int)(927 * controlyscale));
+				startrect = new Rect((int)(270 * controlxscale), (int)(1082 * controlyscale), (int)(364 * controlxscale), (int)(1152 * controlyscale));
+				selectrect = new Rect((int)(400 * controlxscale), (int)(1082 * controlyscale), (int)(485 * controlxscale), (int)(1152 * controlyscale));
+				
+				emuBitmap = Bitmap.createBitmap(sourceWidth, sourceHeight, Config.ARGB_8888);
+				DeSmuME.resize(emuBitmap);
+				width = newWidth;
+				height = newHeight;
+				sized = true;
+				doForceResize = false;
+			}
+		}
+
+
+		@Override
+		public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2,
+				int arg3) {
+			// TODO Auto-generated method stub
 			
-			xscale = (float)dest.width() / 256.0f;
-			yscale = (float)dest.height() / 384.0f;
-			
-			Bitmap originalControls = BitmapFactory.decodeResource(getResources(), R.drawable.dscontrols);
-			controls = Bitmap.createScaledBitmap(originalControls, dest.width(), dest.height(), true);
-			
-			Bitmap originalTouchControls = BitmapFactory.decodeResource(getResources(), R.drawable.dscontrolstouch);
-			touchControls = Bitmap.createScaledBitmap(originalTouchControls, dest.width(), dest.height(), true);
-			
-			float controlxscale = (float)dest.width() / (float)originalControls.getWidth();
-			float controlyscale = (float)dest.height() / (float)originalControls.getHeight();
-			
-			lrect = new Rect((int)(0 * controlxscale), (int)(0 * controlyscale), (int)(160 * controlxscale), (int)(90 * controlyscale));
-			rrect = new Rect((int)(610 * controlxscale), (int)(0 * controlyscale), (int)(768 * controlxscale), (int)(90 * controlyscale));
-			touchrect = new Rect((int)(320 * controlxscale), (int)(0 * controlyscale), (int)(430 * controlxscale), (int)(60 * controlyscale));
-			leftrect = new Rect((int)(0 * controlxscale), (int)(915 * controlyscale), (int)(110 * controlxscale), (int)(1015 * controlyscale));
-			uprect = new Rect((int)(111 * controlxscale), (int)(810 * controlyscale), (int)(221 * controlxscale), (int)(914 * controlyscale));
-			rightrect = new Rect((int)(222 * controlxscale), (int)(915 * controlyscale), (int)(333 * controlxscale), (int)(1015 * controlyscale));
-			downrect = new Rect((int)(111 * controlxscale), (int)(1016 * controlyscale), (int)(221 * controlxscale), (int)(1116 * controlyscale));
-			arect = new Rect((int)(639 * controlxscale), (int)(895 * controlyscale), (int)(768 * controlxscale), (int)(1026 * controlyscale));
-			brect = new Rect((int)(521 * controlxscale), (int)(995 * controlyscale), (int)(639 * controlxscale), (int)(1118 * controlyscale));
-			yrect = new Rect((int)(397 * controlxscale), (int)(895 * controlyscale), (int)(517 * controlxscale), (int)(1026 * controlyscale));
-			xrect = new Rect((int)(521 * controlxscale), (int)(805 * controlyscale), (int)(639 * controlxscale), (int)(927 * controlyscale));
-			startrect = new Rect((int)(270 * controlxscale), (int)(1082 * controlyscale), (int)(364 * controlxscale), (int)(1152 * controlyscale));
-			selectrect = new Rect((int)(400 * controlxscale), (int)(1082 * controlyscale), (int)(485 * controlxscale), (int)(1152 * controlyscale));
-			
-			emuBitmap = Bitmap.createBitmap(sourceWidth, sourceHeight, Config.ARGB_8888);
-			DeSmuME.resize(emuBitmap);
-			width = newWidth;
-			height = newHeight;
-			sized = true;
-			doForceResize = false;
+		}
+
+
+		@Override
+		public void surfaceCreated(SurfaceHolder arg0) {
+			drawingThread = new DrawingThread(coreThread, this);
+			drawingThread.start();
+		}
+
+
+		@Override
+		public void surfaceDestroyed(SurfaceHolder arg0) {
+			if(drawingThread != null) {
+				drawingThread.keepDrawing.set(false);
+				drawingThread.drawEventLock.lock();
+				drawingThread.drawEvent.signal();
+				drawingThread.drawEventLock.unlock();
+				drawingThread = null;
+			}
 		}
 		
 	}

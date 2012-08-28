@@ -19,8 +19,6 @@ class EmulatorThread extends Thread {
 		this.activity = activity;
 	}
 	
-	public static boolean inited = false;
-	public static boolean romLoaded = false;
 	boolean soundPaused = true;
 	
 	long lastDraw = 0;
@@ -54,7 +52,7 @@ class EmulatorThread extends Thread {
 	
 	public void setPause(boolean set) {
 		paused.set(set);
-		if(inited) {
+		if(DeSmuME.inited) {
 			DeSmuME.setSoundPaused(set ? 1 : 0);
 			soundPaused = set;
 		}
@@ -74,7 +72,7 @@ class EmulatorThread extends Thread {
 		
 		while(!finished.get()) {
 			
-			if(!inited) {
+			if(!DeSmuME.inited) {
 				DeSmuME.context = activity;
 				DeSmuME.load();
 				
@@ -88,18 +86,18 @@ class EmulatorThread extends Thread {
 				
 				
 				DeSmuME.init();
-				inited = true;
+				DeSmuME.inited = true;
 			}
 			if(pendingRomLoad != null) {
 				activity.msgHandler.sendEmptyMessage(MainActivity.LOADING_START);
 				if(!DeSmuME.loadRom(pendingRomLoad)) {
 					activity.msgHandler.sendEmptyMessage(MainActivity.LOADING_END);
 					activity.msgHandler.sendEmptyMessage(MainActivity.ROM_ERROR);
-					romLoaded = false;
+					DeSmuME.romLoaded = false;
 				}
 				else {
 					activity.msgHandler.sendEmptyMessage(MainActivity.LOADING_END);
-					romLoaded = true;
+					DeSmuME.romLoaded = true;
 					setPause(false);
 				}
 				pendingRomLoad = null;
