@@ -102,6 +102,8 @@
 #define FASTCALL __attribute__((regparm(3)))
 #elif defined(_MSC_VER) || defined(__INTEL_COMPILER)
 #define FASTCALL
+#elif defined(ANDROID)
+#define FASTCALL 
 #else
 #define FASTCALL
 #endif

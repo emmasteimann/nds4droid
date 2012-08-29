@@ -105,10 +105,11 @@ LOCAL_SRC_FILES			:= 	desmume/src/aggdraw.cpp \
 LOCAL_ARM_NEON 			:= true
 LOCAL_ARM_MODE 			:= arm
 LOCAL_CFLAGS			:= -DANDROID -DHAVE_LIBAGG -DHAVE_LIBZ -fexceptions -DHAVE_NEON=1 -march=armv6 -marm -mfloat-abi=softfp -mfpu=neon
-LOCAL_STATIC_LIBRARIES 	:= aggneon mathneon sevenzip
-LOCAL_LDLIBS 			:= -llog -lz -lGLESv1_CM -lEGL -ljnigraphics -lOpenSLES
+LOCAL_STATIC_LIBRARIES 	:= aggneon mathneon sevenzip 
+LOCAL_LDLIBS 			:= -llog -lz -lGLESv1_CM -lEGL -ljnigraphics -lOpenSLES -landroid
 
 include $(BUILD_SHARED_LIBRARY)
 
 include $(MY_LOCAL_PATH)/desmume/src/android/agg/agg_neon.mk
 include $(MY_LOCAL_PATH)/desmume/src/android/math-neon/Android.mk
+

@@ -22,6 +22,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Surface;
 
 class DeSmuME {
 	
@@ -65,6 +66,7 @@ class DeSmuME {
 	static native void change3D(int set);
 	static native void changeSound(int set);
 	static native void setSoundPaused(int set);
+	static native void drawToSurface(Surface surface);
 	
 	static boolean touchScreenMode = false;
 	static boolean inited = false;

@@ -418,18 +418,38 @@ static std::vector<char> v;
 
 static void loadrom(std::string fname) {
 
-	FILE* inf = fopen(fname.c_str(),"rb");
-	if(!inf) return;
+	if(!useMmapForRomLoading)
+	{
+		FILE* inf = fopen(fname.c_str(),"rb");
+		if(!inf) return;
 
-	fseek(inf,0,SEEK_END);
-	int size = ftell(inf);
-	fseek(inf,0,SEEK_SET);
+		fseek(inf,0,SEEK_END);
+		int size = ftell(inf);
+		fseek(inf,0,SEEK_SET);
 
-	gameInfo.resize(size);
-	fread(gameInfo.romdata,1,size,inf);
-	gameInfo.fillGap();
-	
-	fclose(inf);
+		gameInfo.resize(size);
+		fread(gameInfo.romdata,1,size,inf);
+		gameInfo.fillGap();
+		
+		fclose(inf);
+	}
+	else
+	{
+		struct stat stats;
+		if(stat(fname.c_str(), &stats) == -1)
+			return;
+		int fd = open(fname.c_str(), O_RDONLY);
+		if(fd == -1)
+			return;
+		char* map = (char*)mmap(NULL, stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+		if(map == MAP_FAILED)
+			return;
+		gameInfo.resize(stats.st_size);
+		gameInfo.romdata = map;
+		gameInfo.openRomFd = fd;
+		gameInfo.fillGap();
+			
+	}
 }
 
 static int rom_init_path(const char *filename, const char *logicalFilename)
@@ -623,7 +643,12 @@ void NDS_FreeROM(void)
 	if ((u8*)MMU.CART_ROM == (u8*)gameInfo.romdata)
 		gameInfo.romdata = NULL;
 	if (MMU.CART_ROM != MMU.UNUSED_RAM)
-		delete [] MMU.CART_ROM;
+	{
+		if(!useMmapForRomLoading)
+			delete [] MMU.CART_ROM;
+		else
+			gameInfo.cleanup();
+	}
 	MMU_unsetRom();
 }
 
@@ -1937,7 +1962,7 @@ static /*donotinline*/ std::pair<s32,s32> armInnerLoop(
 	const u64 nds_timer_base, const s32 s32next, s32 arm9, s32 arm7)
 {
 	s32 timer = minarmtime<doarm9,doarm7>(arm9,arm7);
-	while(timer < s32next && !sequencer.reschedule && execute)
+	while(timer < s32next && !sequencer.reschedule)
 	{
 		if(doarm9 && (!doarm7 || arm9 <= timer))
 		{

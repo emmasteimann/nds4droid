@@ -24,6 +24,8 @@ class DrawingThread extends Thread{
 	
 	AtomicBoolean keepDrawing = new AtomicBoolean(true);
 	
+	static boolean DO_DIRECT_DRAW = false;
+	
 	@Override
 	public void run() {
 		
@@ -38,15 +40,15 @@ class DrawingThread extends Thread{
 			if(!keepDrawing.get())
 				return;
 			
-			Canvas canvas = view.surfaceHolder.lockCanvas();
+			Canvas canvas = DO_DIRECT_DRAW ? null : view.surfaceHolder.lockCanvas();
 			try {
 				synchronized(view.surfaceHolder) {
 					
 					if(!DeSmuME.inited)
 						continue;
-				
-					if(view.width != canvas.getWidth() || view.height != canvas.getHeight() || view.doForceResize)
-						view.resize(canvas.getWidth(), canvas.getHeight());
+					
+					if(view.doForceResize)
+						view.resize(view.width, view.height);
 					
 					if(view.emuBitmap == null)
 						continue;
@@ -58,18 +60,24 @@ class DrawingThread extends Thread{
 					}
 					else
 						DeSmuME.copyMasterBuffer();
-					DeSmuME.draw(view.emuBitmap);
-					
-					canvas.drawBitmap(view.emuBitmap, view.src, view.dest, null);
-					if(DeSmuME.touchScreenMode)
-						canvas.drawBitmap(view.touchControls, 0, 0, view.controlsPaint);
+					if(DO_DIRECT_DRAW)
+						DeSmuME.drawToSurface(view.surfaceHolder.getSurface());
 					else
-						canvas.drawBitmap(view.controls, 0, 0, view.controlsPaint);
+						DeSmuME.draw(view.emuBitmap);
+					
+					if(!DO_DIRECT_DRAW) {
+						canvas.drawBitmap(view.emuBitmap, view.src, view.dest, null);
+						if(DeSmuME.touchScreenMode)
+							canvas.drawBitmap(view.touchControls, 0, 0, view.controlsPaint);
+						else
+							canvas.drawBitmap(view.controls, 0, 0, view.controlsPaint);
+					}
 
 				}
 			}
 			finally {
-				view.surfaceHolder.unlockCanvasAndPost(canvas);
+				if(!DO_DIRECT_DRAW)
+					view.surfaceHolder.unlockCanvasAndPost(canvas);
 				drawEventLock.unlock();
 			}
 		

@@ -79,11 +79,20 @@ class EmulatorThread extends Thread {
 				final String defaultWorkingDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/nds4droid";
 				final String path = PreferenceManager.getDefaultSharedPreferences(activity).getString(Settings.DESMUME_PATH, defaultWorkingDir);
 				final File workingDir = new File(path);
-				DeSmuME.setWorkingDir(workingDir.getAbsolutePath(), activity.getCacheDir().getAbsolutePath());
+				final File tempDir = new File(path + "/Temp");
+				tempDir.mkdir();
+				DeSmuME.setWorkingDir(workingDir.getAbsolutePath(), tempDir.getAbsolutePath() + "/");
 				workingDir.mkdir();
 				new File(path + "/States").mkdir();
 				new File(path + "/Battery").mkdir();
 				
+				//clear any previously extracted ROMs
+				
+				final File[] cacheFiles = tempDir.listFiles();
+				for(File cacheFile : cacheFiles) {
+					if(cacheFile.getAbsolutePath().toLowerCase().endsWith(".nds"))
+						cacheFile.delete();
+				}
 				
 				DeSmuME.init();
 				DeSmuME.inited = true;

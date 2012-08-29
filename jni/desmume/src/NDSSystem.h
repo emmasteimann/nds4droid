@@ -37,6 +37,13 @@
 #include "pathsettings.h"
 #endif
 
+#ifndef _WINDOWS
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
+
 template<typename Type>
 struct buttonstruct {
 	union {
@@ -310,11 +317,41 @@ struct RomBanner
   //840h  -    End of Icon/Title structure (next 1C0h bytes usually FFh-filled)
 };
 
-struct GameInfo
+extern bool useMmapForRomLoading;
+
+class GameInfo
 {
+public:
 	GameInfo()
-		: romdata(NULL)
+		: romdata(NULL), openRomFd(-1)
 	{}
+	
+	~GameInfo()
+	{
+		closeMmap();
+	}
+	
+	int openRomFd;
+	
+	void closeMmap()
+	{
+		if(useMmapForRomLoading)
+		{
+			if(openRomFd != -1)
+				close(openRomFd);
+			openRomFd = -1;
+			if(romdata != NULL)
+				munmap(romdata, romsize);
+			romdata = NULL;
+		}
+	}
+	
+	void cleanup()
+	{
+		if(useMmapForRomLoading)
+			closeMmap();
+		else if(romdata != NULL) delete[] romdata;
+	}
 
 	void loadData(char* buf, int size)
 	{
@@ -326,11 +363,12 @@ struct GameInfo
 
 	void fillGap()
 	{
-		memset(romdata+romsize,0xFF,allocatedSize-romsize);
+		if(!useMmapForRomLoading)
+			memset(romdata+romsize,0xFF,allocatedSize-romsize);
 	}
 
 	void resize(int size) {
-		if(romdata != NULL) delete[] romdata;
+		cleanup();
 
 		//calculate the necessary mask for the requested size
 		mask = size-1; 
@@ -344,7 +382,8 @@ struct GameInfo
 		//could be read from the rom
 		allocatedSize = mask+4;
 
-		romdata = new char[allocatedSize];
+		if(!useMmapForRomLoading)
+			romdata = new char[allocatedSize];
 		romsize = size;
 	}
 	u32 crc;

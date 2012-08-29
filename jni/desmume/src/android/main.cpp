@@ -18,10 +18,13 @@
 #include <jni.h>
 #include <errno.h>
 
+#include <android/native_window_jni.h>
+
 #include <EGL/egl.h>
 #include <GLES/gl.h>
 #include <android/sensor.h>
 #include <android/bitmap.h>
+
 
 #include "main.h"
 #include "../OGLRender.h"
@@ -79,6 +82,7 @@ EGLSurface surface;
 EGLContext context;
 const char* IniName = NULL;
 char androidTempPath[1024];
+bool useMmapForRomLoading;
 
 extern "C" {
 
@@ -182,11 +186,36 @@ void JNI_NOARGS(copyMasterBuffer)
  		video.buffer[i] = 0xFF000000 | RGB15TO32_NOALPHA(src[i]);
 }
 
+void doBitmapDraw(u32* src, u8* dest, int width, int height, int stride)
+{
+	if(video.currentfilter == VideoInfo::NONE)
+	{
+		if(stride == width * sizeof(u32)) //bitmap is the same size, we can do one massive memcpy
+			memcpy(dest, src, width * height * sizeof(u32));
+		for(int y = 0 ; y < height ; ++y)
+		{
+			memcpy(dest, &src[y * width], width * sizeof(u32));
+			dest += bitmapInfo.stride;
+		}
+	}
+	else
+	{
+		//the alpha channels are screwy because of interpolation
+		//we need to go pixel by pixel and clear them
+		for(int y = 0 ; y < height ; ++y)
+		{
+			u32* destline = (u32*)dest;
+			for(int x = 0 ; x < width ; ++x)
+				*destline++ = 0xFF000000 | *src++;
+			dest += stride;
+		}
+	}
+}
+
 void JNI(draw, jobject bitmap)
 {
 	aggDraw.hud->attach((u8*)video.buffer, 256, 384, 1024);
 	DoDisplay_DrawHud();
-	
 	
 	video.filter();
 	
@@ -194,35 +223,23 @@ void JNI(draw, jobject bitmap)
 	void* pixels = NULL;
 	if(AndroidBitmap_lockPixels(env,bitmap,&pixels) >= 0)
 	{
-		u32* src = (u32*)video.finalBuffer();
-		u8* dest = (u8*)pixels;
-		int height = video.height;
-		int width = video.width;
-		int stride = bitmapInfo.stride;
-		if(video.currentfilter == VideoInfo::NONE)
-		{
-			if(bitmapInfo.stride == width * sizeof(u32)) //bitmap is the same size, we can do one massive memcpy
-				memcpy(dest, src, width * height * sizeof(u32));
-			for(int y = 0 ; y < height ; ++y)
-			{
-				memcpy(dest, &src[y * width], width * sizeof(u32));
-				dest += bitmapInfo.stride;
-			}
-		}
-		else
-		{
-			//the alpha channels are screwy because of interpolation
-			//we need to go pixel by pixel and clear them
-			for(int y = 0 ; y < height ; ++y)
-			{
-				u32* destline = (u32*)dest;
-				for(int x = 0 ; x < width ; ++x)
-					*destline++ = 0xFF000000 | *src++;
-				dest += bitmapInfo.stride;
-			}
-		}
+		doBitmapDraw((u32*)video.finalBuffer(), (u8*)pixels, video.width, video.height, bitmapInfo.stride);
 		AndroidBitmap_unlockPixels(env, bitmap);
 	}
+}
+
+void JNI(drawToSurface, jobject surface)
+{
+	ANativeWindow* window = ANativeWindow_fromSurface(env, surface);
+	if(!window)
+		return;
+	
+	ANativeWindow_Buffer buffer;
+    if (ANativeWindow_lock(window, &buffer, NULL) >= 0) {
+		
+    }
+	
+	ANativeWindow_release(window);
 }
 
 bool NDS_Pause(bool showMsg = true)
@@ -432,7 +449,7 @@ bool nds4droid_loadrom(const char* path)
 	if(!ObtainFile(path, LogicalName, PhysicalName, "rom", s_nonRomExtensions, ARRAY_SIZE(s_nonRomExtensions)))
 		return false;
 		
-	return doRomLoad(path, LogicalName);
+	return doRomLoad(path, PhysicalName);
 }
 
 void JNI(resize, jobject bitmap)
@@ -526,6 +543,7 @@ void loadSettings(JNIEnv* env)
 	CommonSettings.GFX3D_Fog = GetPrivateProfileBool(env, "3D", "EnableFog", 1, IniName);
 	CommonSettings.GFX3D_Texture = GetPrivateProfileBool(env, "3D", "EnableTexture", 1, IniName);
 	CommonSettings.GFX3D_LineHack = GetPrivateProfileBool(env, "3D", "EnableLineHack", 0, IniName);
+	useMmapForRomLoading = GetPrivateProfileBool(env, "General", "UseMmap", true, IniName);
 }
 
 void JNI_NOARGS(loadSettings)

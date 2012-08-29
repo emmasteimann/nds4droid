@@ -536,10 +536,10 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 
 
 		@Override
-		public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2,
-				int arg3) {
-			// TODO Auto-generated method stub
-			
+		public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+			synchronized(surfaceHolder) {
+				view.resize(width, height);
+			}
 		}
 
 

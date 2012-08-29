@@ -105,8 +105,9 @@ LOCAL_ARM_MODE 			:= thumb
 LOCAL_ARM_NEON 			:= false
 LOCAL_CFLAGS			:= -DANDROID -DHAVE_LIBAGG -DHAVE_LIBZ -fexceptions
 LOCAL_STATIC_LIBRARIES 	:= aggcompat sevenzip
-LOCAL_LDLIBS 			:= -llog -lz -lGLESv1_CM -lEGL -ljnigraphics -lOpenSLES
+LOCAL_LDLIBS 			:= -llog -lz -lGLESv1_CM -lEGL -ljnigraphics -lOpenSLES -landroid
 
 include $(BUILD_SHARED_LIBRARY)
 
 include $(MY_LOCAL_PATH)/desmume/src/android/agg/agg_compat.mk
+

@@ -190,6 +190,17 @@ static struct TempFiles
 {
 	struct TemporaryFile
 	{
+	
+	
+		TemporaryFile(const char* path)
+		{
+			char tempPath [1024];
+			GetTempPath(1024, tempPath);
+			strcat(tempPath, path);
+			strcpy(filename, tempPath);
+			
+		}
+		
 		TemporaryFile(const char* cat, const char* ext)
 		{
 			if(!ext || !*ext) ext = DEFAULT_EXTENSION;
@@ -275,6 +286,12 @@ static struct TempFiles
 	const char* GetFile(const char* category, const char* extension)
 	{
 		tempFiles.push_back(TemporaryFile(category, extension));
+		return tempFiles.back().filename;
+	}
+	
+	const char* GetFile(const char* path)
+	{
+		tempFiles.push_back(TemporaryFile(path));
 		return tempFiles.back().filename;
 	}
 
@@ -481,12 +498,13 @@ bool ObtainFile(const char* Name, char *const & LogicalName, char *const & Physi
 			if(item < 0)
 				item = ChooseItemFromArchive(archive, !forceManual, ignoreExtensions, numIgnoreExtensions);
 
-			const char* TempFileName = s_tempFiles.GetFile(category, strrchr(archive.GetItemName(item), '.'));
+			const char* TempFileName = s_tempFiles.GetFile(archive.GetItemName(item));
 			if(!archive.ExtractItem(item, TempFileName))
 				s_tempFiles.ReleaseFile(TempFileName);
+			LOGI("Extracting temporary ROM to %s", TempFileName);
 			s_tempFiles.ReleaseFile(PhysicalName);
 			strcpy(PhysicalName, TempFileName);
-			_snprintf(LogicalName + strlen(LogicalName), 1024 - (strlen(LogicalName)+1), "|%s", archive.GetItemName(item));
+			//_snprintf(LogicalName + strlen(LogicalName), 1024 - (strlen(LogicalName)+1), "|%s", archive.GetItemName(item));
 		}
 	}
 }
