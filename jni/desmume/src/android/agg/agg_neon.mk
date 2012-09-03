@@ -8,7 +8,7 @@ LOCAL_MODULE 		:= 	libaggneon
 LOCAL_ARM_MODE 		:= arm
 LOCAL_ARM_NEON 		:= true
 LOCAL_C_INCLUDES 	:= 	$(LOCAL_PATH)/include
-LOCAL_CFLAGS		:= -DHAVE_NEON=1 -march=armv6 -marm -mfloat-abi=softfp -mfpu=neon
+LOCAL_CFLAGS		:= -DHAVE_NEON=1 -march=armv7-a -marm -mfpu=neon -ftree-vectorize -fsingle-precision-constant
 LOCAL_SRC_FILES		:= 	src/agg_arc.cpp \
 				src/agg_arrowhead.cpp \
 				src/agg_bezier_arc.cpp \

@@ -65,6 +65,42 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     
+    <!-- Release 8 -->
+    <string name="Display">Display</string>
+    <string name="Controls">Controls</string>
+    <string name="EditLayout">Edit controls layout</string>
+    <string name="EditLayoutDesc">Edit where the touch controls are placed on the screen.</string>
+    <string name="UseTouchPort">Portrait touch buttons</string>
+    <string name="UseTouchPortDesc">Use touch buttons on the screen in portrait mode.</string>
+    <string name="UseTouchLand">Landscape touch buttons</string>
+    <string name="UseTouchLandDesc">Use touch buttons on the screen in landscape mode.</string>
+    <string name="ResetLayout">Reset controls layout</string>
+    <string name="ResetLayoutDesc">Reset the layout of touch controls to their defaults.</string>
+    <string name="Sound">Sound</string>
+    <string name="LCDSwap">Swap LCDs</string>
+    <string name="LCDSwapDesc">Check to swap the location of the main and touch LCDs.</string>
+    <string name="ButtonTrans">Button transparency</string>
+    <string name="ButtonTransDesc">How transparent the on-screen touch buttons should be</string>
+    <string name="Haptic">Haptic feedback</string>
+    <string name="HapticDesc">Provide haptic feedback on button press if supported by device.</string>
+    <string name="KeymapDialogDesc">Press a key to to map to this button</string>
+    <string name="KeymapValuePreface">Currently mapped to</string>
+    <string name="EditKeymap">Edit key mappings</string>
+    <string name="EditKeymapDesc">Edit mappings from hardware keys to DS buttons.</string>
+    <string name="Up">Up</string>
+    <string name="Down">Down</string>
+    <string name="Left">Left</string>
+    <string name="Right">Right</string>
+    <string name="A">A</string>
+    <string name="B">B</string>
+    <string name="X">X</string>
+    <string name="Y">Y</string>
+    <string name="Select">Start</string>
+    <string name="Start">Select</string>
+    <string name="L">L</string>
+    <string name="R">R</string>
+    <string name="Touch">Touch</string>
+    
     <!-- Do not translate -->
     <string-array name="filternames">
         <item>Normal</item>

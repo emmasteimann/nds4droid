@@ -118,17 +118,17 @@ static void Agg_init_fonts()
 
 AggDraw_Desmume aggDraw;
 
-#if defined(WIN32) || defined(ANDROID)
+#if defined(WIN32)
 T_AGG_RGBA agg_targetScreen(0, 256, 384, 1024);
 #else
 T_AGG_RGB555 agg_targetScreen(0, 256, 384, 1512);
 #endif
 
-static u32 luaBuffer[256*192*2];
-T_AGG_RGBA agg_targetLua((u8*)luaBuffer, 256, 384, 1024);
+//static u32 luaBuffer[256*192*2];
+T_AGG_RGBA agg_targetLua((u8*)0, 256, 384, 1024);
 
-static u32 hudBuffer[256*192*2];
-T_AGG_RGBA agg_targetHud((u8*)hudBuffer, 256, 384, 1024);
+//static u32 hudBuffer[256*192*2];
+T_AGG_RGBA agg_targetHud(0, 256, 384, 1024);
 
 static AggDrawTarget* targets[] = {
 	&agg_targetScreen,
@@ -149,10 +149,7 @@ void Agg_init()
 	if(CommonSettings.single_core())
 		aggDraw.hud = &agg_targetScreen;
 
-	//and the more clever compositing isnt supported in non-windows
-	#ifndef WIN32
 	aggDraw.hud = &agg_targetScreen;
-	#endif
 
 	aggDraw.hud->setFont("verdana18_bold");
 }

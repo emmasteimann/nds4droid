@@ -3233,6 +3233,7 @@ TEMPLATE static u32 FASTCALL  OP_BLX_REG(const u32 i)
 
 #define SIGNEXTEND_24(i) (((s32)i<<8)>>8)
 
+TEMPLATE static u32 FASTCALL OP_B(const u32 i) HOT;
 TEMPLATE static u32 FASTCALL OP_B(const u32 i)
 {
 	static const u32 mov_r12_r12 = 0xE1A0C00C;

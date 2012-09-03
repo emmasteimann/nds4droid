@@ -1,5 +1,6 @@
 <resources>
-
+    
+	<!-- Release 1 -->
     <string name="app_name">nds4droid</string>
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">설정</string>
@@ -29,5 +30,98 @@
     <string name="SaveState">현재상태 저장</string>
     <string name="RestoreState">상태 복원</string>
     <string name="Settings">설정</string>
-	<string name="touchnotify">화면 상단 중앙의 터치 버튼을 사용하여 터치 모드에서 키패드 모드로 전환하실 수 있습니다.</string>
+    
+	<!-- Release 2 -->
+    <string name="touchnotify">화면 상단 중앙의 \'터치\' 버튼을 사용하여 터치 모드에서 키패드 모드로 전환하실 수 있습니다</string>
+    <string name="frameskip">프레임 건너뛰기</string>
+    <string name="frameskipdesc">에뮬레이션 중 건너뛸 (Skip) 할 프레임 개수를 지정합니다. 느린 에뮬레이션을 실시간 속도에 맞추도록 돕습니다.</string>
+    <string name="vsync">수직 동기화 (VSync)</string>
+    <string name="vsyncdesc">화면의 주사율에 맞게 게임 화면의 갱신 속도를 동기화 합니다. 에뮬레이션을 느리게 하지만 꺼져있을 경우 화면에 글리치가 발생할 수 있습니다.</string>
+    <string name="fps">FPS 보여주기</string>
+    <string name="fpsdesc">FPS 를 스크린에 그립니다.</string>
+    <string name="showtouchmsg">터치 메시지 보여주기</string>
+    <string name="showtouchmsgdesc">터치방식/키패드방식 모드 변환에 관한 설명 메시지를 보여줍니다.</string>
+    
+    <!-- Release 3 -->
+    <string name="loading">로딩</string>    
+    
+    <!-- Release 4 -->
+    <string name="filter">스크린 필터</string>
+    <string name="filterdesc">사용자 기기의 해상도에 맞게 Nintendo DS 게임 해상도를 높여줄때 필요한 필터를 선택합니다. 고사양의 필터일 수록 게임 속도를 저하시킵니다.</string>
+    
+    <!-- Release 5 -->
+    <string name="threedrenderer">3D 렌더링</string>
+    <string name="threedrendererdesc">원하시는 3D 렌더링 엔진을 선택합니다.</string>
+    <string-array name ="threed_options">
+        <item>사용안함</item>
+        <item>OpenGL 렌더링</item>
+        <item>소프트웨어 자체 렌더링</item>
+    </string-array>
+    <string name="sound">사운드 켜기</string>
+    <string name="sounddesc">오디오 처리 및 재생 사용하기. 끌경우 게임 속도가 향상 됩니다.</string>
+    <string name="showsoundmsg">사운드 메시지 보여주기</string>
+    <string name="showsoundmsgdesc">게임 사운드를 켜고 끔에 관하여 사용자의 의향을 묻는 메시지를 보여줍니다.</string>
+    <string name="soundmsg">게임 사운드를 켜시겠습니까? 사운드를 켜실 경우 3 에서 5 FPS 성능 저하가 발생하게됩니다.</string>
+    <string name="yes">예</string>
+    <string name="no">아니오</string>
+    
+    <!-- Do not translate -->
+    <string-array name="filternames">
+        <item>Normal</item>
+		<item>HQ2x</item>
+		<item>2XSaI</item>
+		<item>Super2XSaI</item>
+		<item>SuperEagle</item>
+		<item>Scanline</item>
+		<item>Bilinear</item>
+		<item>Nearest 2X</item>
+		<item>HQ2xS</item>
+		<item>LQ2x</item>
+		<item>LQ2xS</item>
+        <item>EPX</item>
+        <item>Nearest+ 1.5X</item>
+        <item>Nearest 1.5X</item>
+        <item>EPX+</item>
+        <item>EPX 1.5X</item>
+        <item>EPX+ 1.5X</item>
+        <item>HQ4x</item>
+    </string-array>
+        <string-array name="zerothroughnine">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+    </string-array>
+    <string-array name="zerothroughseventeen">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+        <item>15</item>
+        <item>16</item>
+        <item>17</item>
+    </string-array>
+   	<string-array name="zerothroughtwo">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    
 </resources>

@@ -599,7 +599,7 @@ template<int PROCNUM> FORCEINLINE void _MMU_write32(u32 addr, u32 val) { _MMU_wr
 
 void FASTCALL _MMU_ARM9_write08(u32 adr, u8 val);
 void FASTCALL _MMU_ARM9_write16(u32 adr, u16 val);
-void FASTCALL _MMU_ARM9_write32(u32 adr, u32 val);
+void FASTCALL _MMU_ARM9_write32(u32 adr, u32 val) HOT;
 u8  FASTCALL _MMU_ARM9_read08(u32 adr);
 u16 FASTCALL _MMU_ARM9_read16(u32 adr);
 u32 FASTCALL _MMU_ARM9_read32(u32 adr);

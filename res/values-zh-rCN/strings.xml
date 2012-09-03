@@ -1,0 +1,127 @@
+<resources>
+    
+	<!-- Release 1 -->
+    <string name="app_name">nds4droid</string>
+    <string name="hello_world">测试程序!</string>
+    <string name="menu_settings">设置</string>
+    <string name="title_activity_main">nds4droid</string>
+	<string-array name="file_options">
+		<!--item>重命名</item--> 
+		<item>删除</item>
+		<!--item>剪切</item-->
+		<!--item>拷贝</item-->
+		<item>发送至...</item>
+	</string-array>
+	<string name="rom_error">读取ROM出错(</string>
+	<string name="OK">确定</string>
+	<string name="location">定位</string>
+    <string name="cant_read_folder">无法读取文件夹</string>
+    <string name="nnew">新建</string>
+    <string name="select">选择</string>
+    <string name="file_name">文件名：</string>
+    <string name="cancel">取消</string>
+    <string name="create">保存</string>
+    <string name="no_data">无数据</string>
+    <color name="gray">#ffff0000</color>
+    <string name="err">错误</string>
+    <string name="Load">读取</string>
+    <string name="QuickSave">快速保存</string>
+    <string name="QuickRestore">快速恢复</string>
+    <string name="SaveState">保存状态</string>
+    <string name="RestoreState">恢复状态</string>
+    <string name="Settings">设定</string>
+    
+    <!-- Release 2 -->
+    <string name="touchnotify">请点击顶部的“点击”按钮以切换键盘和触屏模式</string>
+    <string name="frameskip">跳帧</string>
+    <string name="frameskipdesc">在模拟状态下跳过多少帧，可以加速实现实时仿真</string>
+    <string name="vsync">VSync</string>
+    <string name="vsyncdesc">只在帧间绘制屏幕. 可以减慢仿真，如关闭会导致图像故障</string>
+    <string name="fps">显示 FPS</string>
+    <string name="fpsdesc">绘制 FPS 到屏幕</string>
+    <string name="showtouchmsg">显示触摸信息</string>
+    <string name="showtouchmsgdesc">在触屏和键盘模式间切换时，显示一条消息给用户</string>
+    
+    <!-- Release 3 -->
+    <string name="loading">加载中</string>    
+    
+    <!-- Release 4 -->
+    <string name="filter">屏幕过滤器</string>
+    <string name="filterdesc">过滤器用于调节屏幕分比率，在从任天堂DS屏幕转换到现有屏幕，高分辨率的过滤器会影响渲染性能.</string>
+    
+    <!-- Release 5 -->
+    <string name="threedrenderer">三维渲染器</string>
+    <string name="threedrendererdesc">选择三维渲染引擎</string>
+    <string-array name ="threed_options">
+        <item>无</item>
+        <item>OpenGL</item>
+        <item>软件</item>
+    </string-array>
+    <string name="sound">开启声音</string>
+    <string name="sounddesc">开启音频回放和音频处理。关闭此项可以提高性能</string>
+    <string name="showsoundmsg">显示声音信息</string>
+    <string name="showsoundmsgdesc">显示一条消息询问用户是否需要开启声音</string>
+    <string name="soundmsg">是否需要开启声音? 这会导致降低 3 到5 FPS 的性能</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
+    
+    <!-- Do not translate -->
+    <string-array name="filternames">
+        <item>Normal</item>
+		<item>HQ2x</item>
+		<item>2XSaI</item>
+		<item>Super2XSaI</item>
+		<item>SuperEagle</item>
+		<item>Scanline</item>
+		<item>Bilinear</item>
+		<item>Nearest 2X</item>
+		<item>HQ2xS</item>
+		<item>LQ2x</item>
+		<item>LQ2xS</item>
+        <item>EPX</item>
+        <item>Nearest+ 1.5X</item>
+        <item>Nearest 1.5X</item>
+        <item>EPX+</item>
+        <item>EPX 1.5X</item>
+        <item>EPX+ 1.5X</item>
+        <item>HQ4x</item>
+    </string-array>
+        <string-array name="zerothroughnine">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+    </string-array>
+    <string-array name="zerothroughseventeen">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+        <item>15</item>
+        <item>16</item>
+        <item>17</item>
+    </string-array>
+   	<string-array name="zerothroughtwo">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    
+</resources>

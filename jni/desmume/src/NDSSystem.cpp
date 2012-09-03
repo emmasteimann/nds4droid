@@ -1959,6 +1959,10 @@ static FORCEINLINE s32 minarmtime(s32 arm9, s32 arm7)
 
 template<bool doarm9, bool doarm7>
 static /*donotinline*/ std::pair<s32,s32> armInnerLoop(
+	const u64 nds_timer_base, const s32 s32next, s32 arm9, s32 arm7) HOT;
+
+template<bool doarm9, bool doarm7>
+static /*donotinline*/ std::pair<s32,s32> armInnerLoop(
 	const u64 nds_timer_base, const s32 s32next, s32 arm9, s32 arm7)
 {
 	s32 timer = minarmtime<doarm9,doarm7>(arm9,arm7);

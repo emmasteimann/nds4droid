@@ -1,5 +1,22 @@
 package com.opendoorstudios.ds4droid;
 
+/*
+Copyright (C) 2012 Jeffrey Quesnelle
+
+This file is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This file is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with the this software.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
@@ -7,6 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 class EmulatorThread extends Thread {
 	
@@ -66,6 +84,7 @@ class EmulatorThread extends Thread {
 	public Lock inFrameLock = new ReentrantLock();
 	int fps = 1;
 	MainActivity activity = null;
+	long frameCounter = 0;
 	
 	@Override
 	public void run() {
@@ -127,11 +146,14 @@ class EmulatorThread extends Thread {
 					soundPaused = false;
 				}
 				
+				long frameStartTime = System.currentTimeMillis();
 				inFrameLock.lock();
 				DeSmuME.runCore();
 				inFrameLock.unlock();
 				fps = DeSmuME.runOther();
 				
+				/*if(frameCounter++ % 5 == 0)
+					Log.i(MainActivity.TAG, String.format("Frame: %d ms", System.currentTimeMillis() - frameStartTime));*/
 
 				activity.msgHandler.sendEmptyMessage(MainActivity.DRAW_SCREEN);
 		

@@ -48,7 +48,7 @@
 #define JNI(X,...) Java_com_opendoorstudios_ds4droid_DeSmuME_##X(JNIEnv* env, jclass* clazz, __VA_ARGS__)
 #define JNI_NOARGS(X) Java_com_opendoorstudios_ds4droid_DeSmuME_##X(JNIEnv* env, jclass* clazz)
 
-
+unsigned int frameCount = 0;
 
 GPU3DInterface *core3DList[] = {
 	&gpu3DNull,
@@ -177,54 +177,94 @@ void JNI_NOARGS(copyMasterBuffer)
 {
 	video.srcBuffer = (u8*)GPU_screen;
 	
+	//draw directly to the gpu screen
+	aggDraw.hud->attach((u8*)video.srcBuffer, 256, 384, 512);
+	DoDisplay_DrawHud();
+	
 	//convert pixel format to 32bpp for compositing
 	//why do we do this over and over? well, we are compositing to 
 	//filteredbuffer32bpp, and it needs to get refreshed each frame..
 	const int size = video.size();
 	u16* src = (u16*)video.srcBuffer;
-	for(int i=0;i<size;i++)
- 		video.buffer[i] = 0xFF000000 | RGB15TO32_NOALPHA(src[i]);
+	if(bitmapInfo.format == ANDROID_BITMAP_FORMAT_RGBA_8888)
+	{
+		u32* dest = video.buffer;
+		for(int i=0;i<size;++i)
+			*dest++ = 0xFF000000 | RGB15TO32_NOALPHA(src[i]);
+	}
+	else if(bitmapInfo.format == ANDROID_BITMAP_FORMAT_RGB_565)
+	{
+		u16* dest = (u16*)video.buffer;
+		for(int i=0;i<size;++i)
+			*dest++ = RGB15TO16_REVERSE(src[i]);
+	}
 }
 
-void doBitmapDraw(u32* src, u8* dest, int width, int height, int stride)
+void doBitmapDraw(u8* pixels, u8* dest, int width, int height, int stride, int pixelFormat, int verticalOffset)
 {
-	if(video.currentfilter == VideoInfo::NONE)
+	if(pixelFormat == ANDROID_BITMAP_FORMAT_RGBA_8888)
 	{
-		if(stride == width * sizeof(u32)) //bitmap is the same size, we can do one massive memcpy
-			memcpy(dest, src, width * height * sizeof(u32));
-		for(int y = 0 ; y < height ; ++y)
+		u32* src = (u32*)pixels;
+		src += (verticalOffset * width);
+		if(video.currentfilter == VideoInfo::NONE)
 		{
-			memcpy(dest, &src[y * width], width * sizeof(u32));
-			dest += bitmapInfo.stride;
+			if(stride == width * sizeof(u32)) //bitmap is the same size, we can do one massive memcpy
+				memcpy(dest, src, width * height * sizeof(u32));
+			else
+			{
+				for(int y = 0 ; y < height ; ++y)
+				{
+					memcpy(dest, &src[y * width], width * sizeof(u32));
+					dest += stride;
+				}
+			}
+		}
+		else
+		{
+			//the alpha channels are screwy because of interpolation
+			//we need to go pixel by pixel and clear them
+			for(int y = 0 ; y < height ; ++y)
+			{
+				u32* destline = (u32*)dest;
+				for(int x = 0 ; x < width ; ++x)
+					*destline++ = 0xFF000000 | *src++;
+				dest += stride;
+			}
 		}
 	}
 	else
 	{
-		//the alpha channels are screwy because of interpolation
-		//we need to go pixel by pixel and clear them
-		for(int y = 0 ; y < height ; ++y)
+		u16* src = (u16*)pixels;
+		src += (verticalOffset * width);
+		if(stride == width * sizeof(u16)) //bitmap is the same size, we can do one massive memcpy
+			memcpy(dest, src, width * height * sizeof(u16));
+		else
 		{
-			u32* destline = (u32*)dest;
-			for(int x = 0 ; x < width ; ++x)
-				*destline++ = 0xFF000000 | *src++;
-			dest += stride;
+			for(int y = 0 ; y < height ; ++y)
+			{
+				memcpy(dest, &src[y * width], width * sizeof(u16));
+				dest += stride;
+			}
 		}
 	}
 }
 
-void JNI(draw, jobject bitmap)
+void JNI(draw, jobject bitmapMain, jobject bitmapTouch)
 {
-	aggDraw.hud->attach((u8*)video.buffer, 256, 384, 1024);
-	DoDisplay_DrawHud();
-	
-	video.filter();
-	
+	if(bitmapInfo.format == ANDROID_BITMAP_FORMAT_RGBA_8888)
+		video.filter();
+	int vhb2 = video.height / 2;
 	//here the magic happens
 	void* pixels = NULL;
-	if(AndroidBitmap_lockPixels(env,bitmap,&pixels) >= 0)
+	if(AndroidBitmap_lockPixels(env,bitmapMain,&pixels) >= 0)
 	{
-		doBitmapDraw((u32*)video.finalBuffer(), (u8*)pixels, video.width, video.height, bitmapInfo.stride);
-		AndroidBitmap_unlockPixels(env, bitmap);
+		doBitmapDraw((u8*)video.finalBuffer(), (u8*)pixels, video.width, vhb2, bitmapInfo.stride, bitmapInfo.format, 0);
+		AndroidBitmap_unlockPixels(env, bitmapMain);
+	}
+	if(AndroidBitmap_lockPixels(env,bitmapTouch,&pixels) >= 0)
+	{
+		doBitmapDraw((u8*)video.finalBuffer(), (u8*)pixels, video.width, vhb2, bitmapInfo.stride, bitmapInfo.format, vhb2);
+		AndroidBitmap_unlockPixels(env, bitmapTouch);
 	}
 }
 
@@ -237,6 +277,21 @@ void JNI(drawToSurface, jobject surface)
 	ANativeWindow_Buffer buffer;
     if (ANativeWindow_lock(window, &buffer, NULL) >= 0) {
 		
+		int stride, format;
+		if(buffer.format == WINDOW_FORMAT_RGB_565)
+		{
+			stride = buffer.stride * sizeof(u16);
+			format = ANDROID_BITMAP_FORMAT_RGB_565;
+		}
+		else
+		{
+			stride = buffer.stride * sizeof(u32);
+			format = ANDROID_BITMAP_FORMAT_RGBA_8888;
+		}
+		
+		doBitmapDraw((u8*)video.finalBuffer(), (u8*)buffer.bits, video.width, video.height, stride, format, 0);
+		
+		ANativeWindow_unlockAndPost(window);
     }
 	
 	ANativeWindow_release(window);
@@ -361,15 +416,7 @@ void nds4droid_user()
 		gfx3d.frameCtr = 0;
 	}
 
-
 	mainLoopData.toolframecount++;
-	if (mainLoopData.toolframecount == kFramesPerToolUpdate)
-	{
-		//if(SoundView_IsOpened()) SoundView_Refresh();
-		//RefreshAllToolWindows();
-
-		mainLoopData.toolframecount = 0;
-	}
 
 	//Update_RAM_Search(); // Update_RAM_Watch() is also called.
 
@@ -454,8 +501,6 @@ bool nds4droid_loadrom(const char* path)
 
 void JNI(resize, jobject bitmap)
 {
-	osd->singleScreen = (video.layout == 2);
-	//video.setfilter(VideoInfo::SUPER2XSAI);
 	AndroidBitmap_getInfo(env, bitmap, &bitmapInfo);
 }
 
@@ -474,10 +519,16 @@ void JNI(setFilter, int index)
 	video.setfilter(index);
 }
 
+
 void JNI_NOARGS(runCore)
 {
-	if(execute)
-		nds4droid_core();
+	int frameStart = GetTickCount();
+	nds4droid_core();
+	int frameEnd = GetTickCount();
+	/*if(frameCount ++ % 5 == 0)
+	{
+		LOGI("Core frame time %d ms", frameEnd - frameStart);
+	}*/
 }
 
 void JNI(setSoundPaused, int set)
@@ -551,10 +602,29 @@ void JNI_NOARGS(loadSettings)
 	loadSettings(env);
 }
 
+
+#ifdef HAVE_NEON
+void enable_runfast()
+{
+	static const unsigned int x = 0x04086060;
+	static const unsigned int y = 0x03000000;
+	int r;
+	asm volatile (
+		"fmrx	%0, fpscr			\n\t"	//r0 = FPSCR
+		"and	%0, %0, %1			\n\t"	//r0 = r0 & 0x04086060
+		"orr	%0, %0, %2			\n\t"	//r0 = r0 | 0x03000000
+		"fmxr	fpscr, %0			\n\t"	//FPSCR = r0
+		: "=r"(r)
+		: "r"(x), "r"(y)
+	);
+}
+#endif
+
 void JNI(init, jobject _inst)
 {
 #ifdef HAVE_NEON
 	//neontest();
+	enable_runfast();
 #endif
 	INFO("");
 	for(std::vector<Logger*>::iterator it = Logger::channels.begin() ; it != Logger::channels.end() ; ++it)

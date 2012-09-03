@@ -25,6 +25,11 @@
 #include "agg_trans_affine.h"
 
 
+bool is_equal_eps_hacked(const double v1, const double v2, const double epsilon)
+{
+	return fabs(v1 - v2) <= double(epsilon);
+}
+
 
 namespace agg
 {
@@ -136,12 +141,12 @@ namespace agg
     //------------------------------------------------------------------------
     bool trans_affine::is_identity(double epsilon) const
     {
-        return is_equal_eps(sx,  1.0, epsilon) &&
-               is_equal_eps(shy, 0.0, epsilon) &&
-               is_equal_eps(shx, 0.0, epsilon) && 
-               is_equal_eps(sy,  1.0, epsilon) &&
-               is_equal_eps(tx,  0.0, epsilon) &&
-               is_equal_eps(ty,  0.0, epsilon);
+        return is_equal_eps_hacked(sx,  1.0, epsilon) &&
+               is_equal_eps_hacked(shy, 0.0, epsilon) &&
+               is_equal_eps_hacked(shx, 0.0, epsilon) && 
+               is_equal_eps_hacked(sy,  1.0, epsilon) &&
+               is_equal_eps_hacked(tx,  0.0, epsilon) &&
+               is_equal_eps_hacked(ty,  0.0, epsilon);
     }
 
     //------------------------------------------------------------------------
@@ -153,12 +158,12 @@ namespace agg
     //------------------------------------------------------------------------
     bool trans_affine::is_equal(const trans_affine& m, double epsilon) const
     {
-        return is_equal_eps(sx,  m.sx,  epsilon) &&
-               is_equal_eps(shy, m.shy, epsilon) &&
-               is_equal_eps(shx, m.shx, epsilon) && 
-               is_equal_eps(sy,  m.sy,  epsilon) &&
-               is_equal_eps(tx,  m.tx,  epsilon) &&
-               is_equal_eps(ty,  m.ty,  epsilon);
+        return is_equal_eps_hacked(sx,  m.sx,  epsilon) &&
+               is_equal_eps_hacked(shy, m.shy, epsilon) &&
+               is_equal_eps_hacked(shx, m.shx, epsilon) && 
+               is_equal_eps_hacked(sy,  m.sy,  epsilon) &&
+               is_equal_eps_hacked(tx,  m.tx,  epsilon) &&
+               is_equal_eps_hacked(ty,  m.ty,  epsilon);
     }
 
     //------------------------------------------------------------------------

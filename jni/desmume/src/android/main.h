@@ -43,4 +43,6 @@ extern "C" {
 } //end extern "C"
 #endif
 
+extern unsigned int frameCount;
+
 #endif

@@ -34,6 +34,7 @@ import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Environment;
@@ -41,6 +42,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.SparseIntArray;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -52,6 +54,7 @@ import android.view.SurfaceView;
 public class MainActivity extends Activity implements OnSharedPreferenceChangeListener {
 
 	static EmulatorThread coreThread;
+	static Controls controls;
 	NDSView view;
 	static final String TAG = "nds4droid";
 	Dialog loadingDialog = null;
@@ -123,7 +126,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		view = new NDSView(this);
 		setContentView(view);
 		
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		controls = new Controls(view);
 
 		Settings.applyDefaults(this);
 		prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
@@ -257,24 +260,6 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	}
 
 	
-	static final int BUTTON_RIGHT = 0;
-	static final int BUTTON_DOWN = 1;
-	static final int BUTTON_UP = 2;
-	static final int BUTTON_LEFT = 3;
-	static final int BUTTON_A = 4;
-	static final int BUTTON_B = 5;
-	static final int BUTTON_X = 6;
-	static final int BUTTON_Y = 7;
-	static final int BUTTON_L = 8;
-	static final int BUTTON_R = 9;
-	static final int BUTTON_START = 10;
-	static final int BUTTON_SELECT = 11;
-	static final int BUTTON_TOUCH = 12;
-
-	final int[] buttonStates = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-	
-	final SparseIntArray touchMap = new SparseIntArray();
-	
 	SharedPreferences prefs = null;
 	
 	@Override
@@ -292,6 +277,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			view.showTouchMessage = prefs.getBoolean(Settings.SHOW_TOUCH_MESSAGE, true);
 			view.vsync = prefs.getBoolean(Settings.VSYNC, true);
 			view.showSoundMessage = prefs.getBoolean(Settings.SHOW_SOUND_MESSAGE, true);
+			view.lcdSwap = prefs.getBoolean(Settings.LCD_SWAP, false);
+			view.buttonAlpha = (int)(prefs.getInt(Settings.BUTTON_TRANSPARENCY, 78) * 2.55f);
+			view.haptic = prefs.getBoolean(Settings.HAPTIC, false);
+			
+			controls.loadMappings(this);
 			
 			if(key != null) {
 				if(key.equals(Settings.SCREEN_FILTER)) {
@@ -317,16 +307,18 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	class NDSView extends SurfaceView implements Callback {
 
 		SurfaceHolder surfaceHolder;
-		Bitmap emuBitmap;
-		Bitmap controls;
-		Bitmap touchControls;
+		Bitmap emuBitmapMain, emuBitmapTouch;
 		DrawingThread drawingThread;
-		final Paint controlsPaint = new Paint();
+		
 		final Paint emuPaint = new Paint();
 		
 		public boolean showTouchMessage = false;
 		public boolean showSoundMessage = false;
+		public boolean lcdSwap = false;
 		public boolean vsync = true;
+		public boolean forceTouchScreen = false;
+		public int buttonAlpha = 78;
+		public boolean haptic = true;
 		
 		public NDSView(Context context) {
 			super(context);
@@ -334,7 +326,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			surfaceHolder.addCallback(this);
 			setKeepScreenOn(true);
 			setWillNotDraw(false);
-			controlsPaint.setAlpha(200);
+			setFocusable(true);
+			setFocusableInTouchMode(true);
+			
 			
 		}
 		
@@ -373,162 +367,54 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		
 		@Override
 		public boolean onTouchEvent(MotionEvent event) {
-			if(xscale == 0 || yscale == 0)
-				return false;
-			if(DeSmuME.touchScreenMode) {
-				switch(event.getAction()) {
-				case MotionEvent.ACTION_DOWN:
-				case MotionEvent.ACTION_MOVE:
-					float x = event.getX();
-					float y = event.getY();
-					x /= xscale;
-					y /= yscale;
-					//convert to bottom touch screen coordinates
-					y -= 192;
-					if(y >= 0)
-						DeSmuME.touchScreenTouch((int)x, (int)y);
-					break;
-				case MotionEvent.ACTION_UP:
-				case MotionEvent.ACTION_CANCEL:
-					DeSmuME.touchScreenRelease();
-					if(touchrect.contains((int)event.getX(), (int)event.getY())) {
-						DeSmuME.touchScreenMode = false;
-					}
-					break;
-				default:
-					return false;
-				}
-				return true;				
-			}
-			else
-			{
-				if(!sized)
-					return false;
-				switch(event.getActionMasked()) {
-				case MotionEvent.ACTION_DOWN:
-				case MotionEvent.ACTION_POINTER_DOWN:
-				case MotionEvent.ACTION_MOVE:
-				{
-						int i = event.getActionIndex();
-						int id = event.getPointerId(i);
-						
-						int existingTouch = touchMap.get(id, -1);
-						if(existingTouch != -1) {
-							//reset touch, it may get re-set below but we need to deal with sliding off a button
-							buttonStates[existingTouch] = 0;
-						}
-						int x = (int) event.getX(i);
-						int y = (int) event.getY(i);
-
-						if(leftrect.contains(x, y))
-							touchMap.put(id, BUTTON_LEFT);
-						else if(rightrect.contains(x, y))
-							touchMap.put(id, BUTTON_RIGHT);
-						else if(uprect.contains(x, y))
-							touchMap.put(id, BUTTON_UP);
-						else if(downrect.contains(x, y))
-							touchMap.put(id, BUTTON_DOWN);
-						else if(arect.contains(x, y))
-							touchMap.put(id, BUTTON_A);
-						else if(brect.contains(x, y))
-							touchMap.put(id, BUTTON_B);
-						else if(xrect.contains(x, y))
-							touchMap.put(id, BUTTON_X);
-						else if(yrect.contains(x, y))
-							touchMap.put(id, BUTTON_Y);
-						else if(lrect.contains(x, y))
-							touchMap.put(id, BUTTON_L);
-						else if(rrect.contains(x, y))
-							touchMap.put(id, BUTTON_R);
-						else if(startrect.contains(x, y))
-							touchMap.put(id, BUTTON_START);
-						else if(selectrect.contains(x, y)) 
-							touchMap.put(id, BUTTON_SELECT);
-						else
-							break;
-						
-						buttonStates[touchMap.get(id)] = 1;
-				}
-					break;
-				case MotionEvent.ACTION_UP:
-				case MotionEvent.ACTION_POINTER_UP:
-					if(touchrect.contains((int)event.getX(), (int)event.getY())) {
-						DeSmuME.touchScreenMode = true;
-						touchMap.clear();
-						break;
-					}
-					//FT
-				case MotionEvent.ACTION_CANCEL:
-				{
-					int i = event.getActionIndex();
-					int id = event.getPointerId(i);
-					int button = touchMap.get(id, -1);
-					if(button == -1)
-						break;
-					buttonStates[button] = 0;
-					touchMap.delete(id);
-				}
-					break;
-				default:
-					return false;
-				}
-				DeSmuME.setButtons(buttonStates[BUTTON_L], buttonStates[BUTTON_R], buttonStates[BUTTON_UP], buttonStates[BUTTON_DOWN], buttonStates[BUTTON_LEFT], buttonStates[BUTTON_RIGHT], 
-						buttonStates[BUTTON_A], buttonStates[BUTTON_B], buttonStates[BUTTON_X], buttonStates[BUTTON_Y], buttonStates[BUTTON_START], buttonStates[BUTTON_SELECT]);
-				return true;
-			}
+			return controls.onTouchEvent(event);
 		}
 		
 		boolean resized = false;
 		boolean sized = false;
+		boolean landscape = false;
 		int sourceWidth;
 		int sourceHeight;
-		Rect src, dest;
-		int width = 0, height = 0;
+		Rect srcMain, destMain, srcTouch, destTouch;
+		int width = 0, height = 0, pixelFormat;
 		
-		float xscale = 0, yscale = 0;
 		
-		public Rect lrect, rrect, touchrect, uprect, leftrect, downrect, rightrect, startrect, selectrect, xrect, arect, yrect, brect;
-
-		void resize(int newWidth, int newHeight) {
+		void resize(int newWidth, int newHeight, int newPixelFormat) {
 			
 			synchronized(view.surfaceHolder) {
 				//TODO: Use desmume resizing if desired as well as landscape mode
 				sourceWidth = DeSmuME.getNativeWidth();
 				sourceHeight = DeSmuME.getNativeHeight();
 				resized = true;
-				src = new Rect(0, 0, sourceWidth, sourceHeight);
-				dest = new Rect(0, 0, newWidth, newHeight);
+			
+				final boolean hasScreenFilter = DeSmuME.getSettingInt(Settings.SCREEN_FILTER, 0) != 0;
+				final boolean is565 = newPixelFormat == PixelFormat.RGB_565 && !hasScreenFilter;
+				landscape = newWidth > newHeight;
+				controls.setView(this);
+				controls.loadControls(MainActivity.this, newWidth, newHeight, is565, landscape);
 				
-				xscale = (float)dest.width() / 256.0f;
-				yscale = (float)dest.height() / 384.0f;
+				forceTouchScreen = !prefs.getBoolean("Controls." + (landscape ? "Landscape." : "Portrait.") + "Draw", false);
 				
-				Bitmap originalControls = BitmapFactory.decodeResource(getResources(), R.drawable.dscontrols);
-				controls = Bitmap.createScaledBitmap(originalControls, dest.width(), dest.height(), true);
+				srcMain = new Rect(0, 0, sourceWidth, sourceHeight / 2);
+				srcTouch = new Rect(0, 0, sourceWidth, sourceHeight / 2);
+				if(landscape) {
+					destMain = new Rect(0, 0, newWidth / 2, newHeight);
+					destTouch = new Rect(newWidth / 2, 0, newWidth, newHeight);
+				}
+				else {
+					destMain = new Rect(0, 0, newWidth, newHeight / 2);
+					destTouch = new Rect(0, newHeight / 2, newWidth, newHeight);
+				}
+								
+				emuBitmapMain = Bitmap.createBitmap(sourceWidth, sourceHeight / 2, is565 ? Config.RGB_565 : Config.ARGB_8888);
+				emuBitmapTouch = Bitmap.createBitmap(sourceWidth, sourceHeight / 2, is565 ? Config.RGB_565 : Config.ARGB_8888);
+				DeSmuME.resize(emuBitmapMain);
 				
-				Bitmap originalTouchControls = BitmapFactory.decodeResource(getResources(), R.drawable.dscontrolstouch);
-				touchControls = Bitmap.createScaledBitmap(originalTouchControls, dest.width(), dest.height(), true);
+				requestFocus();
 				
-				float controlxscale = (float)dest.width() / (float)originalControls.getWidth();
-				float controlyscale = (float)dest.height() / (float)originalControls.getHeight();
-				
-				lrect = new Rect((int)(0 * controlxscale), (int)(0 * controlyscale), (int)(160 * controlxscale), (int)(90 * controlyscale));
-				rrect = new Rect((int)(610 * controlxscale), (int)(0 * controlyscale), (int)(768 * controlxscale), (int)(90 * controlyscale));
-				touchrect = new Rect((int)(320 * controlxscale), (int)(0 * controlyscale), (int)(430 * controlxscale), (int)(60 * controlyscale));
-				leftrect = new Rect((int)(0 * controlxscale), (int)(915 * controlyscale), (int)(110 * controlxscale), (int)(1015 * controlyscale));
-				uprect = new Rect((int)(111 * controlxscale), (int)(810 * controlyscale), (int)(221 * controlxscale), (int)(914 * controlyscale));
-				rightrect = new Rect((int)(222 * controlxscale), (int)(915 * controlyscale), (int)(333 * controlxscale), (int)(1015 * controlyscale));
-				downrect = new Rect((int)(111 * controlxscale), (int)(1016 * controlyscale), (int)(221 * controlxscale), (int)(1116 * controlyscale));
-				arect = new Rect((int)(639 * controlxscale), (int)(895 * controlyscale), (int)(768 * controlxscale), (int)(1026 * controlyscale));
-				brect = new Rect((int)(521 * controlxscale), (int)(995 * controlyscale), (int)(639 * controlxscale), (int)(1118 * controlyscale));
-				yrect = new Rect((int)(397 * controlxscale), (int)(895 * controlyscale), (int)(517 * controlxscale), (int)(1026 * controlyscale));
-				xrect = new Rect((int)(521 * controlxscale), (int)(805 * controlyscale), (int)(639 * controlxscale), (int)(927 * controlyscale));
-				startrect = new Rect((int)(270 * controlxscale), (int)(1082 * controlyscale), (int)(364 * controlxscale), (int)(1152 * controlyscale));
-				selectrect = new Rect((int)(400 * controlxscale), (int)(1082 * controlyscale), (int)(485 * controlxscale), (int)(1152 * controlyscale));
-				
-				emuBitmap = Bitmap.createBitmap(sourceWidth, sourceHeight, Config.ARGB_8888);
-				DeSmuME.resize(emuBitmap);
 				width = newWidth;
 				height = newHeight;
+				pixelFormat = newPixelFormat;
 				sized = true;
 				doForceResize = false;
 			}
@@ -538,7 +424,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		@Override
 		public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 			synchronized(surfaceHolder) {
-				view.resize(width, height);
+				view.resize(width, height, format);
 			}
 		}
 
@@ -559,6 +445,16 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				drawingThread.drawEventLock.unlock();
 				drawingThread = null;
 			}
+		}
+		
+		@Override
+		public boolean onKeyDown(int keyCode, KeyEvent event) {
+			return controls.onKeyDown(keyCode, event);
+		}
+		
+		@Override
+		public boolean onKeyUp(int keyCode, KeyEvent event) {
+			return controls.onKeyUp(keyCode, event);
 		}
 		
 	}

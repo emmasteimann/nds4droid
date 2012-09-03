@@ -1,5 +1,22 @@
 package com.opendoorstudios.ds4droid;
 
+/*
+Copyright (C) 2012 Jeffrey Quesnelle
+
+This file is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This file is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with the this software.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
@@ -12,6 +29,7 @@ import android.graphics.Canvas;
 class DrawingThread extends Thread{
 	
 	public DrawingThread(EmulatorThread coreThread, NDSView view) {
+		super("DrawingThread");
 		this.view = view;
 		this.coreThread = coreThread;
 	}
@@ -24,7 +42,7 @@ class DrawingThread extends Thread{
 	
 	AtomicBoolean keepDrawing = new AtomicBoolean(true);
 	
-	static boolean DO_DIRECT_DRAW = false;
+	static final boolean DO_DIRECT_DRAW = false;
 	
 	@Override
 	public void run() {
@@ -44,39 +62,46 @@ class DrawingThread extends Thread{
 			try {
 				synchronized(view.surfaceHolder) {
 					
-					if(!DeSmuME.inited)
-						continue;
-					
-					if(view.doForceResize)
-						view.resize(view.width, view.height);
-					
-					if(view.emuBitmap == null)
-						continue;
-
-					if(view.vsync) {
-						coreThread.inFrameLock.lock();
-							DeSmuME.copyMasterBuffer();
-						coreThread.inFrameLock.unlock();
-					}
-					else
-						DeSmuME.copyMasterBuffer();
-					if(DO_DIRECT_DRAW)
-						DeSmuME.drawToSurface(view.surfaceHolder.getSurface());
-					else
-						DeSmuME.draw(view.emuBitmap);
-					
-					if(!DO_DIRECT_DRAW) {
-						canvas.drawBitmap(view.emuBitmap, view.src, view.dest, null);
-						if(DeSmuME.touchScreenMode)
-							canvas.drawBitmap(view.touchControls, 0, 0, view.controlsPaint);
+					if(canvas != null) {
+						if(!DeSmuME.inited)
+							continue;
+						
+						if(view.doForceResize)
+							view.resize(view.width, view.height, view.pixelFormat);
+						
+						if(view.emuBitmapMain == null)
+							continue;
+	
+						if(view.vsync) {
+							coreThread.inFrameLock.lock();
+								DeSmuME.copyMasterBuffer();
+							coreThread.inFrameLock.unlock();
+						}
 						else
-							canvas.drawBitmap(view.controls, 0, 0, view.controlsPaint);
+							DeSmuME.copyMasterBuffer();
+						if(DO_DIRECT_DRAW)
+							DeSmuME.drawToSurface(view.surfaceHolder.getSurface());
+						else {
+							DeSmuME.draw(view.emuBitmapMain, view.emuBitmapTouch);
+						}
+						
+						if(!DO_DIRECT_DRAW) {
+							if(view.lcdSwap) {
+								canvas.drawBitmap(view.emuBitmapTouch, view.srcMain, view.destMain, null);
+								canvas.drawBitmap(view.emuBitmapMain, view.srcTouch, view.destTouch, null);
+							}
+							else {
+								canvas.drawBitmap(view.emuBitmapMain, view.srcMain, view.destMain, null);
+								canvas.drawBitmap(view.emuBitmapTouch, view.srcTouch, view.destTouch, null);
+							}
+							MainActivity.controls.drawControls(canvas);
+						}
 					}
 
 				}
 			}
 			finally {
-				if(!DO_DIRECT_DRAW)
+				if(!DO_DIRECT_DRAW && canvas != null)
 					view.surfaceHolder.unlockCanvasAndPost(canvas);
 				drawEventLock.unlock();
 			}
