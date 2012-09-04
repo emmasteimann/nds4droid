@@ -75,13 +75,13 @@ public class KeyMapPreference extends DialogPreference implements OnKeyListener 
 	
 	@Override
 	public boolean onKey(View v, int keyCode, KeyEvent event) {
-		switch(keyCode) {
+		/*switch(keyCode) {
 		case KeyEvent.KEYCODE_HOME:
 		case KeyEvent.KEYCODE_BACK:
 		case KeyEvent.KEYCODE_SETTINGS:
 		case KeyEvent.KEYCODE_SEARCH:
 			return false;
-		}
+		}*/
 		currentValue = keyCode;
 		sync();
 		return true;
