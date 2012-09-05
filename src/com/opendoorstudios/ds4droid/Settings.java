@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with the this software.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+import java.util.Locale;
 import java.util.Map.Entry;
 
 import android.content.Context;
@@ -135,6 +136,8 @@ public class Settings extends PreferenceActivity {
 	public static final String MAPPING_L = "Controls.KeyMap.L";
 	public static final String MAPPING_R = "Controls.KeyMap.R";
 	public static final String MAPPING_TOUCH = "Controls.KeyMap.Touch";
+	public static final String DONT_ROTATE_LCDS = "WindowRotate";
+	public static final String LANGUAGE = "Language";
 	
 	static void applyMappingDefaults(SharedPreferences prefs, boolean overwrite) {
 		final SharedPreferences.Editor editor = prefs.edit();
@@ -188,6 +191,23 @@ public class Settings extends PreferenceActivity {
 			editor.putBoolean(SHOW_SOUND_MESSAGE, true);
 		if(!prefs.contains(LCD_SWAP))
 			editor.putBoolean(LCD_SWAP, false);
+		if(!prefs.contains(DONT_ROTATE_LCDS))
+			editor.putBoolean(DONT_ROTATE_LCDS, false);
+		if(!prefs.contains(LANGUAGE)) {
+			final String userLanguage = Locale.getDefault().getISO3Language();
+			int lang = 1; //english
+			if(userLanguage.equals("jpn")) 
+				lang = 0;			
+			else if(userLanguage.equals("fra")) 
+				lang = 2;
+			else if(userLanguage.equals("deu"))
+				lang = 3;
+			else if(userLanguage.equals("ita"))
+				lang = 4;
+			else if(userLanguage.equals("spa"))
+				lang = 5;
+			editor.putString(LANGUAGE, String.valueOf(lang));
+		}
 		applyLayoutDefaults(prefs, false);
 		applyMappingDefaults(prefs, false);
 		try {

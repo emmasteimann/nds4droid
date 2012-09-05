@@ -33,6 +33,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
@@ -273,6 +274,11 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	
 	void loadJavaSettings(String key)
 	{
+		if(key != null) {
+			if(DeSmuME.inited && key.equals(Settings.LANGUAGE))
+				DeSmuME.reloadFirmware();
+		}
+		
 		if(view != null) {
 			view.showTouchMessage = prefs.getBoolean(Settings.SHOW_TOUCH_MESSAGE, true);
 			view.vsync = prefs.getBoolean(Settings.VSYNC, true);
@@ -280,6 +286,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			view.lcdSwap = prefs.getBoolean(Settings.LCD_SWAP, false);
 			view.buttonAlpha = (int)(prefs.getInt(Settings.BUTTON_TRANSPARENCY, 78) * 2.55f);
 			view.haptic = prefs.getBoolean(Settings.HAPTIC, false);
+			view.dontRotate = prefs.getBoolean(Settings.DONT_ROTATE_LCDS, false);
 			
 			controls.loadMappings(this);
 			
@@ -373,6 +380,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		boolean resized = false;
 		boolean sized = false;
 		boolean landscape = false;
+		boolean dontRotate = false;
 		int sourceWidth;
 		int sourceHeight;
 		Rect srcMain, destMain, srcTouch, destTouch;
@@ -382,11 +390,10 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		void resize(int newWidth, int newHeight, int newPixelFormat) {
 			
 			synchronized(view.surfaceHolder) {
-				//TODO: Use desmume resizing if desired as well as landscape mode
 				sourceWidth = DeSmuME.getNativeWidth();
 				sourceHeight = DeSmuME.getNativeHeight();
 				resized = true;
-			
+				
 				final boolean hasScreenFilter = DeSmuME.getSettingInt(Settings.SCREEN_FILTER, 0) != 0;
 				final boolean is565 = newPixelFormat == PixelFormat.RGB_565 && !hasScreenFilter;
 				landscape = newWidth > newHeight;
@@ -395,8 +402,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 				
 				forceTouchScreen = !prefs.getBoolean("Controls." + (landscape ? "Landscape." : "Portrait.") + "Draw", false);
 				
-				srcMain = new Rect(0, 0, sourceWidth, sourceHeight / 2);
-				srcTouch = new Rect(0, 0, sourceWidth, sourceHeight / 2);
+				
 				if(landscape) {
 					destMain = new Rect(0, 0, newWidth / 2, newHeight);
 					destTouch = new Rect(newWidth / 2, 0, newWidth, newHeight);
@@ -405,9 +411,19 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 					destMain = new Rect(0, 0, newWidth, newHeight / 2);
 					destTouch = new Rect(0, newHeight / 2, newWidth, newHeight);
 				}
-								
-				emuBitmapMain = Bitmap.createBitmap(sourceWidth, sourceHeight / 2, is565 ? Config.RGB_565 : Config.ARGB_8888);
-				emuBitmapTouch = Bitmap.createBitmap(sourceWidth, sourceHeight / 2, is565 ? Config.RGB_565 : Config.ARGB_8888);
+				
+				if(landscape && dontRotate) {
+					emuBitmapMain = Bitmap.createBitmap(sourceHeight / 2, sourceWidth, is565 ? Config.RGB_565 : Config.ARGB_8888);
+					emuBitmapTouch = Bitmap.createBitmap(sourceHeight / 2, sourceWidth, is565 ? Config.RGB_565 : Config.ARGB_8888);
+					srcMain = new Rect(0, 0, sourceHeight / 2, sourceWidth);
+					srcTouch = new Rect(0, 0, sourceHeight / 2, sourceWidth);
+				}
+				else {
+					emuBitmapMain = Bitmap.createBitmap(sourceWidth, sourceHeight / 2, is565 ? Config.RGB_565 : Config.ARGB_8888);
+					emuBitmapTouch = Bitmap.createBitmap(sourceWidth, sourceHeight / 2, is565 ? Config.RGB_565 : Config.ARGB_8888);
+					srcMain = new Rect(0, 0, sourceWidth, sourceHeight / 2);
+					srcTouch = new Rect(0, 0, sourceWidth, sourceHeight / 2);
+				}
 				DeSmuME.resize(emuBitmapMain);
 				
 				requestFocus();

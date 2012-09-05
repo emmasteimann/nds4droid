@@ -41,6 +41,8 @@ class Controls {
 	NDSView view;
 	boolean landscape;
 	int currentAlpha = -1;
+	Rect screen;
+	float aspectRatio;
 	
 	Controls(NDSView view) {
 		this.view = view;
@@ -71,10 +73,12 @@ class Controls {
 	
 	void loadControls(Context context, int screenWidth, int screenHeight, boolean is565, boolean landscape) {
 		
-		Rect screen = new Rect(0, 0, screenWidth, screenHeight);
+		screen = new Rect(0, 0, screenWidth, screenHeight);
 		
 		xscale = (float)screen.width() / (landscape ? 512.0f : 256.0f);
 		yscale = (float)screen.height() / (landscape ? 192.0f : 384.0f);
+		
+		aspectRatio = (float)screen.width() / (float)screen.height();
 		
 		for(int i = 0 ; i < buttonStates.length ; ++i)
 			buttonStates[i] = 0;
@@ -181,7 +185,13 @@ class Controls {
 				x /= xscale;
 				y /= yscale;
 				//convert to bottom touch screen coordinates
-				if(landscape) {
+				if(landscape && view.dontRotate) {
+					final float newy = x / 1.33f;
+					final float newx = (192 - y) * 1.33f;
+					x = newx;
+					y = newy;
+				}
+				if(landscape && !view.dontRotate) {
 					if(!view.lcdSwap) {
 						x -= 256;
 						if(x >= 0)
@@ -239,7 +249,7 @@ class Controls {
 						if(process.position.contains(x, y)) {
 							process.apply(buttonStates, true);
 							activeTouches.put(id, process);
-							if(view.haptic)
+							if(view.haptic && (event.getActionMasked() != MotionEvent.ACTION_MOVE))
 								view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
 							break;
 						}

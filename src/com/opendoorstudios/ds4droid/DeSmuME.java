@@ -50,7 +50,7 @@ class DeSmuME {
 	static native void runCore();
 	static native int runOther();
 	static native void resize(Bitmap bitmap);
-	static native void draw(Bitmap bitmapMain, Bitmap bitmapTouch);
+	static native void draw(Bitmap bitmapMain, Bitmap bitmapTouch, boolean rotate);
 	static native void touchScreenTouch(int x, int y);
 	static native void touchScreenRelease();
 	static native void setButtons(int l, int r, int up, int down, int left, int right, int a, int b, int x, int y, int start, int select);
@@ -67,6 +67,7 @@ class DeSmuME {
 	static native void changeSound(int set);
 	static native void setSoundPaused(int set);
 	static native void drawToSurface(Surface surface);
+	static native void reloadFirmware();
 	
 	static boolean touchScreenMode = false;
 	static boolean inited = false;

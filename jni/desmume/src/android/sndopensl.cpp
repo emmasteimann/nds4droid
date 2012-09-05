@@ -59,16 +59,21 @@ static bool everEnqueued = false;
 class SoundBuffer
 {
 public:
-	SoundBuffer()
+	SoundBuffer() : data(NULL)
 	{
-		data = NULL;
-		avail = true;
-		samples = 0;
+		reset();
 	}
 	~SoundBuffer()
 	{
+		reset();
+	}
+	void reset()
+	{
 		if(data != NULL)
 			delete [] data;
+		data = NULL;
+		avail = true;
+		samples = 0;
 	}
 	s16* data;
 	bool avail;
@@ -80,6 +85,7 @@ SoundBuffer buffers[NUM_BUFFERS];
 SoundBuffer empty;
 
 static bool muted = false;
+static bool currentlyPlaying = false;
 static int soundbufsize = 0;
 static int nextSoundBuffer = -1;
 static SLmillibel maxVol;
@@ -87,13 +93,14 @@ static SLmillibel maxVol;
 void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 {
 	SLresult result;
-	if(nextSoundBuffer == -1)
+	if(buffers[nextSoundBuffer].avail)
 	{
 		result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, empty.data, soundbufsize);
+		//LOGI("Returned empty sound buffer");
 		return;
 	}
+	//LOGI("Returned sound buffer %d", nextSoundBuffer);
 	result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, buffers[nextSoundBuffer].data, buffers[nextSoundBuffer].samples * sizeof(s16) * 2);
-	nextSoundBuffer = -1;
 	buffers[nextSoundBuffer == 0 ? 1 : 0].avail = true;
 }
 
@@ -154,6 +161,8 @@ int SNDOpenSLInit(int buffersize)
     if(FAILED(result = (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_PLAYING)))
 		return -1;
 		
+	buffers[0].reset();
+	buffers[1].reset();
 	soundbufsize = buffersize;
 	if ((buffers[0].data = new s16[soundbufsize / sizeof(s16)]) == NULL)
 		return -1;
@@ -166,6 +175,7 @@ int SNDOpenSLInit(int buffersize)
 	memset(buffers[1].data, 0, soundbufsize);
 	memset(empty.data, 0, soundbufsize);
 	muted = false;
+	currentlyPlaying = false;
 	LOGI("OpenSL created");
 	return 0;
 }
@@ -196,14 +206,16 @@ void SNDOpenSLUpdateAudio(s16 *buffer, u32 num_samples)
 		{
 			memcpy(buffers[i].data, buffer, sizeof(s16) * 2 * num_samples);
 			int currentSoundBuffer = nextSoundBuffer;
-			nextSoundBuffer = i;
-			buffers[i].avail = false;
 			buffers[i].samples = num_samples;
-			if(currentSoundBuffer == -1)
+			buffers[i].avail = false;
+			nextSoundBuffer = i;
+			if(!currentlyPlaying)
 			{
 				(*bqPlayerBufferQueue)->Clear(bqPlayerBufferQueue);
 				bqPlayerCallback(bqPlayerBufferQueue, NULL);
+				currentlyPlaying = true;
 			}
+			//LOGI("Copied %d samples to buffer %d", num_samples, nextSoundBuffer);
 			return;
 		}
 	}

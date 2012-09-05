@@ -101,6 +101,13 @@
     <string name="R">R</string>
     <string name="Touch">Touch</string>
     
+    <!-- Release 9 -->
+    <string name="DontRotateLCDs">Don\'t rotate LCDs</string>
+    <string name="DontRotateLCDsDesc">In landscape mode, don\'t rotate the game LCDs. Use this for games that were intended to played with the DS held sideways.</string>
+    <string name="Language">Language</string>
+    <string name="LanguageDesc">The language of the system. Multilingual ROMs use this setting. Changes will be applied on the next ROM load.</string>
+    <string name="Gameplay">Gameplay</string>
+    
     <!-- Do not translate -->
     <string-array name="filternames">
         <item>Normal</item>
@@ -158,6 +165,22 @@
         <item>0</item>
         <item>1</item>
         <item>2</item>
+    </string-array>
+    <string-array name="languages">
+        <item>日本語</item>
+        <item>English</item>
+        <item>Français</item>
+        <item>Deutsch</item>
+        <item>Italiano</item>
+        <item>Español</item>
+    </string-array>
+    <string-array name="zerothroughfive">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
     </string-array>
     
 </resources>

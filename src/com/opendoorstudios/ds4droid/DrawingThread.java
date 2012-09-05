@@ -25,6 +25,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.opendoorstudios.ds4droid.MainActivity.NDSView;
 
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 
 class DrawingThread extends Thread{
 	
@@ -82,10 +83,11 @@ class DrawingThread extends Thread{
 						if(DO_DIRECT_DRAW)
 							DeSmuME.drawToSurface(view.surfaceHolder.getSurface());
 						else {
-							DeSmuME.draw(view.emuBitmapMain, view.emuBitmapTouch);
+							DeSmuME.draw(view.emuBitmapMain, view.emuBitmapTouch, view.landscape && view.dontRotate);
 						}
 						
 						if(!DO_DIRECT_DRAW) {
+
 							if(view.lcdSwap) {
 								canvas.drawBitmap(view.emuBitmapTouch, view.srcMain, view.destMain, null);
 								canvas.drawBitmap(view.emuBitmapMain, view.srcTouch, view.destTouch, null);
@@ -94,6 +96,7 @@ class DrawingThread extends Thread{
 								canvas.drawBitmap(view.emuBitmapMain, view.srcMain, view.destMain, null);
 								canvas.drawBitmap(view.emuBitmapTouch, view.srcTouch, view.destTouch, null);
 							}
+							
 							MainActivity.controls.drawControls(canvas);
 						}
 					}

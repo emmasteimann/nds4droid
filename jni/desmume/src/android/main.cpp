@@ -200,22 +200,39 @@ void JNI_NOARGS(copyMasterBuffer)
 	}
 }
 
-void doBitmapDraw(u8* pixels, u8* dest, int width, int height, int stride, int pixelFormat, int verticalOffset)
+void doBitmapDraw(u8* pixels, u8* dest, int width, int height, int stride, int pixelFormat, int verticalOffset, bool rotate)
 {
 	if(pixelFormat == ANDROID_BITMAP_FORMAT_RGBA_8888)
 	{
 		u32* src = (u32*)pixels;
-		src += (verticalOffset * width);
+		src += (verticalOffset * (rotate ? height : width));
 		if(video.currentfilter == VideoInfo::NONE)
 		{
-			if(stride == width * sizeof(u32)) //bitmap is the same size, we can do one massive memcpy
-				memcpy(dest, src, width * height * sizeof(u32));
-			else
+			if(rotate)
 			{
 				for(int y = 0 ; y < height ; ++y)
 				{
-					memcpy(dest, &src[y * width], width * sizeof(u32));
+					u32* destline = (u32*)dest;
+					u32* srccol = src + (height - y - 1);
+					for(int x = 0 ; x < width ; ++x) 
+					{
+						*destline++ = *srccol;
+						srccol += height;
+					}
 					dest += stride;
+				}
+			}
+			else
+			{
+				if(stride == width * sizeof(u32)) //bitmap is the same size, we can do one massive memcpy
+					memcpy(dest, src, width * height * sizeof(u32));
+				else
+				{
+					for(int y = 0 ; y < height ; ++y)
+					{
+						memcpy(dest, &src[y * width], width * sizeof(u32));
+						dest += stride;
+					}
 				}
 			}
 		}
@@ -223,47 +240,80 @@ void doBitmapDraw(u8* pixels, u8* dest, int width, int height, int stride, int p
 		{
 			//the alpha channels are screwy because of interpolation
 			//we need to go pixel by pixel and clear them
-			for(int y = 0 ; y < height ; ++y)
+			if(rotate)
 			{
-				u32* destline = (u32*)dest;
-				for(int x = 0 ; x < width ; ++x)
-					*destline++ = 0xFF000000 | *src++;
-				dest += stride;
+				for(int y = 0 ; y < height ; ++y)
+				{
+					u32* destline = (u32*)dest;
+					u32* srccol = src + (height - y - 1);
+					for(int x = 0 ; x < width ; ++x) 
+					{
+						*destline++ = 0xFF000000 | *srccol;
+						srccol += height;
+					}
+					dest += stride;
+				}
+			}
+			else
+			{
+				for(int y = 0 ; y < height ; ++y)
+				{
+					u32* destline = (u32*)dest;
+					for(int x = 0 ; x < width ; ++x)
+						*destline++ = 0xFF000000 | *src++;
+					dest += stride;
+				}
 			}
 		}
 	}
 	else
 	{
 		u16* src = (u16*)pixels;
-		src += (verticalOffset * width);
-		if(stride == width * sizeof(u16)) //bitmap is the same size, we can do one massive memcpy
-			memcpy(dest, src, width * height * sizeof(u16));
-		else
+		src += (verticalOffset * (rotate ? height : width));
+		if(rotate)
 		{
 			for(int y = 0 ; y < height ; ++y)
 			{
-				memcpy(dest, &src[y * width], width * sizeof(u16));
+				u16* destline = (u16*)dest;
+				u16* srccol = src + (height - y - 1);
+				for(int x = 0 ; x < width ; ++x) 
+				{
+					*destline++ = *srccol;
+					srccol += height;
+				}
 				dest += stride;
+			}
+		}
+		else
+		{
+			if(stride == width * sizeof(u16)) //bitmap is the same size, we can do one massive memcpy
+				memcpy(dest, src, width * height * sizeof(u16));
+			else
+			{
+				for(int y = 0 ; y < height ; ++y)
+				{
+					memcpy(dest, &src[y * width], width * sizeof(u16));
+					dest += stride;
+				}
 			}
 		}
 	}
 }
 
-void JNI(draw, jobject bitmapMain, jobject bitmapTouch)
+void JNI(draw, jobject bitmapMain, jobject bitmapTouch, jboolean rotate)
 {
 	if(bitmapInfo.format == ANDROID_BITMAP_FORMAT_RGBA_8888)
 		video.filter();
-	int vhb2 = video.height / 2;
 	//here the magic happens
 	void* pixels = NULL;
 	if(AndroidBitmap_lockPixels(env,bitmapMain,&pixels) >= 0)
 	{
-		doBitmapDraw((u8*)video.finalBuffer(), (u8*)pixels, video.width, vhb2, bitmapInfo.stride, bitmapInfo.format, 0);
+		doBitmapDraw((u8*)video.finalBuffer(), (u8*)pixels, bitmapInfo.width, bitmapInfo.height, bitmapInfo.stride, bitmapInfo.format, 0, rotate == JNI_TRUE);
 		AndroidBitmap_unlockPixels(env, bitmapMain);
 	}
 	if(AndroidBitmap_lockPixels(env,bitmapTouch,&pixels) >= 0)
 	{
-		doBitmapDraw((u8*)video.finalBuffer(), (u8*)pixels, video.width, vhb2, bitmapInfo.stride, bitmapInfo.format, vhb2);
+		doBitmapDraw((u8*)video.finalBuffer(), (u8*)pixels, bitmapInfo.width, bitmapInfo.height, bitmapInfo.stride, bitmapInfo.format, video.height / 2, rotate == JNI_TRUE);
 		AndroidBitmap_unlockPixels(env, bitmapTouch);
 	}
 }
@@ -289,7 +339,7 @@ void JNI(drawToSurface, jobject surface)
 			format = ANDROID_BITMAP_FORMAT_RGBA_8888;
 		}
 		
-		doBitmapDraw((u8*)video.finalBuffer(), (u8*)buffer.bits, video.width, video.height, stride, format, 0);
+		doBitmapDraw((u8*)video.finalBuffer(), (u8*)buffer.bits, video.width, video.height, stride, format, 0, false);
 		
 		ANativeWindow_unlockAndPost(window);
     }
@@ -595,6 +645,12 @@ void loadSettings(JNIEnv* env)
 	CommonSettings.GFX3D_Texture = GetPrivateProfileBool(env, "3D", "EnableTexture", 1, IniName);
 	CommonSettings.GFX3D_LineHack = GetPrivateProfileBool(env, "3D", "EnableLineHack", 0, IniName);
 	useMmapForRomLoading = GetPrivateProfileBool(env, "General", "UseMmap", true, IniName);
+	fw_config.language = GetPrivateProfileInt(env, "Firmware","Language", 1, IniName);
+}
+
+void JNI_NOARGS(reloadFirmware)
+{
+	NDS_CreateDummyFirmware(&fw_config);
 }
 
 void JNI_NOARGS(loadSettings)
@@ -714,6 +770,8 @@ void JNI(init, jobject _inst)
 	fw_config.message_len = strlen(message);
 	for(int i = 0 ; i < fw_config.message_len ; ++i)
 		fw_config.message[i] = message[i];
+	
+	fw_config.language = GetPrivateProfileInt(env, "Firmware","Language", 1, IniName);
 		
 	video.setfilter(GetPrivateProfileInt(env,"Video", "Filter", video.NONE, IniName));
 	
