@@ -43,8 +43,10 @@ public class KeyMapPreference extends DialogPreference implements OnKeyListener 
 	static String getKeyDesc(int value) {
 		if(value == 0)
 			return "(none)";
-		else
-			return KEYCODE_SYMBOLIC_NAMES.get(value, "(none)");
+		else {
+			final String ret = KEYCODE_SYMBOLIC_NAMES.get(value, "(none)");
+			return ret == null ? "(unknown)" : ret;
+		}
 	}
 	
 	void sync() {
@@ -222,115 +224,6 @@ public class KeyMapPreference extends DialogPreference implements OnKeyListener 
         names.append(KeyEvent.KEYCODE_BUTTON_START, "BUTTON_START");
         names.append(KeyEvent.KEYCODE_BUTTON_SELECT, "BUTTON_SELECT");
         names.append(KeyEvent.KEYCODE_BUTTON_MODE, "BUTTON_MODE");
-        names.append(KeyEvent.KEYCODE_ESCAPE, "ESCAPE");
-        names.append(KeyEvent.KEYCODE_FORWARD_DEL, "FORWARD_DEL");
-        names.append(KeyEvent.KEYCODE_CTRL_LEFT, "CTRL_LEFT");
-        names.append(KeyEvent.KEYCODE_CTRL_RIGHT, "CTRL_RIGHT");
-        names.append(KeyEvent.KEYCODE_CAPS_LOCK, "CAPS_LOCK");
-        names.append(KeyEvent.KEYCODE_SCROLL_LOCK, "SCROLL_LOCK");
-        names.append(KeyEvent.KEYCODE_META_LEFT, "META_LEFT");
-        names.append(KeyEvent.KEYCODE_META_RIGHT, "META_RIGHT");
-        names.append(KeyEvent.KEYCODE_FUNCTION, "FUNCTION");
-        names.append(KeyEvent.KEYCODE_SYSRQ, "SYSRQ");
-        names.append(KeyEvent.KEYCODE_BREAK, "BREAK");
-        names.append(KeyEvent.KEYCODE_MOVE_HOME, "MOVE_HOME");
-        names.append(KeyEvent.KEYCODE_MOVE_END, "MOVE_END");
-        names.append(KeyEvent.KEYCODE_INSERT, "INSERT");
-        names.append(KeyEvent.KEYCODE_FORWARD, "FORWARD");
-        names.append(KeyEvent.KEYCODE_MEDIA_PLAY, "MEDIA_PLAY");
-        names.append(KeyEvent.KEYCODE_MEDIA_PAUSE, "MEDIA_PAUSE");
-        names.append(KeyEvent.KEYCODE_MEDIA_CLOSE, "MEDIA_CLOSE");
-        names.append(KeyEvent.KEYCODE_MEDIA_EJECT, "MEDIA_EJECT");
-        names.append(KeyEvent.KEYCODE_MEDIA_RECORD, "MEDIA_RECORD");
-        names.append(KeyEvent.KEYCODE_F1, "F1");
-        names.append(KeyEvent.KEYCODE_F2, "F2");
-        names.append(KeyEvent.KEYCODE_F3, "F3");
-        names.append(KeyEvent.KEYCODE_F4, "F4");
-        names.append(KeyEvent.KEYCODE_F5, "F5");
-        names.append(KeyEvent.KEYCODE_F6, "F6");
-        names.append(KeyEvent.KEYCODE_F7, "F7");
-        names.append(KeyEvent.KEYCODE_F8, "F8");
-        names.append(KeyEvent.KEYCODE_F9, "F9");
-        names.append(KeyEvent.KEYCODE_F10, "F10");
-        names.append(KeyEvent.KEYCODE_F11, "F11");
-        names.append(KeyEvent.KEYCODE_F12, "F12");
-        names.append(KeyEvent.KEYCODE_NUM_LOCK, "NUM_LOCK");
-        names.append(KeyEvent.KEYCODE_NUMPAD_0, "NUMPAD_0");
-        names.append(KeyEvent.KEYCODE_NUMPAD_1, "NUMPAD_1");
-        names.append(KeyEvent.KEYCODE_NUMPAD_2, "NUMPAD_2");
-        names.append(KeyEvent.KEYCODE_NUMPAD_3, "NUMPAD_3");
-        names.append(KeyEvent.KEYCODE_NUMPAD_4, "NUMPAD_4");
-        names.append(KeyEvent.KEYCODE_NUMPAD_5, "NUMPAD_5");
-        names.append(KeyEvent.KEYCODE_NUMPAD_6, "NUMPAD_6");
-        names.append(KeyEvent.KEYCODE_NUMPAD_7, "NUMPAD_7");
-        names.append(KeyEvent.KEYCODE_NUMPAD_8, "NUMPAD_8");
-        names.append(KeyEvent.KEYCODE_NUMPAD_9, "NUMPAD_9");
-        names.append(KeyEvent.KEYCODE_NUMPAD_DIVIDE, "NUMPAD_DIVIDE");
-        names.append(KeyEvent.KEYCODE_NUMPAD_MULTIPLY, "NUMPAD_MULTIPLY");
-        names.append(KeyEvent.KEYCODE_NUMPAD_SUBTRACT, "NUMPAD_SUBTRACT");
-        names.append(KeyEvent.KEYCODE_NUMPAD_ADD, "NUMPAD_ADD");
-        names.append(KeyEvent.KEYCODE_NUMPAD_DOT, "NUMPAD_DOT");
-        names.append(KeyEvent.KEYCODE_NUMPAD_COMMA, "NUMPAD_COMMA");
-        names.append(KeyEvent.KEYCODE_NUMPAD_ENTER, "NUMPAD_ENTER");
-        names.append(KeyEvent.KEYCODE_NUMPAD_EQUALS, "NUMPAD_EQUALS");
-        names.append(KeyEvent.KEYCODE_NUMPAD_LEFT_PAREN, "NUMPAD_LEFT_PAREN");
-        names.append(KeyEvent.KEYCODE_NUMPAD_RIGHT_PAREN, "NUMPAD_RIGHT_PAREN");
-        names.append(KeyEvent.KEYCODE_VOLUME_MUTE, "VOLUME_MUTE");
-        names.append(KeyEvent.KEYCODE_INFO, "INFO");
-        names.append(KeyEvent.KEYCODE_CHANNEL_UP, "CHANNEL_UP");
-        names.append(KeyEvent.KEYCODE_CHANNEL_DOWN, "CHANNEL_DOWN");
-        names.append(KeyEvent.KEYCODE_ZOOM_IN, "ZOOM_IN");
-        names.append(KeyEvent.KEYCODE_ZOOM_OUT, "ZOOM_OUT");
-        names.append(KeyEvent.KEYCODE_TV, "TV");
-        names.append(KeyEvent.KEYCODE_WINDOW, "WINDOW");
-        names.append(KeyEvent.KEYCODE_GUIDE, "GUIDE");
-        names.append(KeyEvent.KEYCODE_DVR, "DVR");
-        names.append(KeyEvent.KEYCODE_BOOKMARK, "BOOKMARK");
-        names.append(KeyEvent.KEYCODE_CAPTIONS, "CAPTIONS");
-        names.append(KeyEvent.KEYCODE_SETTINGS, "SETTINGS");
-        names.append(KeyEvent.KEYCODE_TV_POWER, "TV_POWER");
-        names.append(KeyEvent.KEYCODE_TV_INPUT, "TV_INPUT");
-        names.append(KeyEvent.KEYCODE_STB_INPUT, "STB_INPUT");
-        names.append(KeyEvent.KEYCODE_STB_POWER, "STB_POWER");
-        names.append(KeyEvent.KEYCODE_AVR_POWER, "AVR_POWER");
-        names.append(KeyEvent.KEYCODE_AVR_INPUT, "AVR_INPUT");
-        names.append(KeyEvent.KEYCODE_PROG_RED, "PROG_RED");
-        names.append(KeyEvent.KEYCODE_PROG_GREEN, "PROG_GREEN");
-        names.append(KeyEvent.KEYCODE_PROG_YELLOW, "PROG_YELLOW");
-        names.append(KeyEvent.KEYCODE_PROG_BLUE, "PROG_BLUE");
-        names.append(KeyEvent.KEYCODE_APP_SWITCH, "APP_SWITCH");
-        names.append(KeyEvent.KEYCODE_BUTTON_1, "BUTTON_1");
-        names.append(KeyEvent.KEYCODE_BUTTON_2, "BUTTON_2");
-        names.append(KeyEvent.KEYCODE_BUTTON_3, "BUTTON_3");
-        names.append(KeyEvent.KEYCODE_BUTTON_4, "BUTTON_4");
-        names.append(KeyEvent.KEYCODE_BUTTON_5, "BUTTON_5");
-        names.append(KeyEvent.KEYCODE_BUTTON_6, "BUTTON_6");
-        names.append(KeyEvent.KEYCODE_BUTTON_7, "BUTTON_7");
-        names.append(KeyEvent.KEYCODE_BUTTON_8, "BUTTON_8");
-        names.append(KeyEvent.KEYCODE_BUTTON_9, "BUTTON_9");
-        names.append(KeyEvent.KEYCODE_BUTTON_10, "BUTTON_10");
-        names.append(KeyEvent.KEYCODE_BUTTON_11, "BUTTON_11");
-        names.append(KeyEvent.KEYCODE_BUTTON_12, "BUTTON_12");
-        names.append(KeyEvent.KEYCODE_BUTTON_13, "BUTTON_13");
-        names.append(KeyEvent.KEYCODE_BUTTON_14, "BUTTON_14");
-        names.append(KeyEvent.KEYCODE_BUTTON_15, "BUTTON_15");
-        names.append(KeyEvent.KEYCODE_BUTTON_16, "BUTTON_16");
-        names.append(KeyEvent.KEYCODE_LANGUAGE_SWITCH, "LANGUAGE_SWITCH");
-        names.append(KeyEvent.KEYCODE_MANNER_MODE, "MANNER_MODE");
-        names.append(KeyEvent.KEYCODE_3D_MODE, "3D_MODE");
-        names.append(KeyEvent.KEYCODE_CONTACTS, "CONTACTS");
-        names.append(KeyEvent.KEYCODE_CALENDAR, "CALENDAR");
-        names.append(KeyEvent.KEYCODE_MUSIC, "MUSIC");
-        names.append(KeyEvent.KEYCODE_CALCULATOR, "CALCULATOR");
-        names.append(KeyEvent.KEYCODE_ZENKAKU_HANKAKU, "ZENKAKU_HANKAKU");
-        names.append(KeyEvent.KEYCODE_EISU, "EISU");
-        names.append(KeyEvent.KEYCODE_MUHENKAN, "MUHENKAN");
-        names.append(KeyEvent.KEYCODE_HENKAN, "HENKAN");
-        names.append(KeyEvent.KEYCODE_KATAKANA_HIRAGANA, "KATAKANA_HIRAGANA");
-        names.append(KeyEvent.KEYCODE_YEN, "YEN");
-        names.append(KeyEvent.KEYCODE_RO, "RO");
-        names.append(KeyEvent.KEYCODE_KANA, "KANA");
-        names.append(KeyEvent.KEYCODE_ASSIST, "ASSIST");
     }
 
 

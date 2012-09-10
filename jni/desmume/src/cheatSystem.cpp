@@ -412,7 +412,7 @@ BOOL CHEATS::add_AR_Direct(CHEATS_LIST cheat)
 	return TRUE;
 }
 
-BOOL CHEATS::add_AR(char *code, char *description, BOOL enabled)
+BOOL CHEATS::add_AR(const char *code, const char *description, BOOL enabled)
 {
 	//if (num == MAX_CHEAT_LIST) return FALSE;
 	size_t num = list.size();
@@ -429,7 +429,7 @@ BOOL CHEATS::add_AR(char *code, char *description, BOOL enabled)
 	return TRUE;
 }
 
-BOOL CHEATS::update_AR(char *code, char *description, BOOL enabled, u32 pos)
+BOOL CHEATS::update_AR(const char *code, const char *description, BOOL enabled, u32 pos)
 {
 	if (pos >= list.size()) return FALSE;
 

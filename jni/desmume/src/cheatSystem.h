@@ -70,8 +70,8 @@ public:
 	void	init(char *path);
 	BOOL	add(u8 size, u32 address, u32 val, char *description, BOOL enabled);
 	BOOL	update(u8 size, u32 address, u32 val, char *description, BOOL enabled, u32 pos);
-	BOOL	add_AR(char *code, char *description, BOOL enabled);
-	BOOL	update_AR(char *code, char *description, BOOL enabled, u32 pos);
+	BOOL	add_AR(const char *code, const char *description, BOOL enabled);
+	BOOL	update_AR(const char *code, const char *description, BOOL enabled, u32 pos);
 	BOOL	add_AR_Direct(CHEATS_LIST cheat);
 	BOOL	add_CB(char *code, char *description, BOOL enabled);
 	BOOL	update_CB(char *code, char *description, BOOL enabled, u32 pos);

@@ -205,7 +205,9 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 	
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
+		final int CHEAT_MENU_INDEX = 6;
 		pauseEmulation();
+		menu.findItem(R.id.cheats).setVisible(DeSmuME.romLoaded);
 		return true;
 	}
 	
@@ -236,6 +238,12 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			break;
 		case R.id.settings:
 			startActivity(new Intent(this, Settings.class));
+			break;
+		case R.id.cheats:
+			startActivity(new Intent(this, Cheats.class));
+			break;
+		case R.id.exit:
+			finish();
 			break;
 		default:
 			return false;

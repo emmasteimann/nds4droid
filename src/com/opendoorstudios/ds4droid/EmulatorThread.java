@@ -104,6 +104,7 @@ class EmulatorThread extends Thread {
 				workingDir.mkdir();
 				new File(path + "/States").mkdir();
 				new File(path + "/Battery").mkdir();
+				new File(path + "/Cheats").mkdir();
 				
 				//clear any previously extracted ROMs
 				
@@ -152,8 +153,8 @@ class EmulatorThread extends Thread {
 				inFrameLock.unlock();
 				fps = DeSmuME.runOther();
 				
-				/*if(frameCounter++ % 5 == 0)
-					Log.i(MainActivity.TAG, String.format("Frame: %d ms", System.currentTimeMillis() - frameStartTime));*/
+				
+				//Log.i(MainActivity.TAG, String.format("Frame: %d FPS", fps));
 
 				activity.msgHandler.sendEmptyMessage(MainActivity.DRAW_SCREEN);
 		

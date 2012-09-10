@@ -68,6 +68,17 @@ class DeSmuME {
 	static native void setSoundPaused(int set);
 	static native void drawToSurface(Surface surface);
 	static native void reloadFirmware();
+	static native int getNumberOfCheats();
+	static native String getCheatName(int pos);
+	static native boolean getCheatEnabled(int pos);
+	static native String getCheatCode(int pos);
+	static native int getCheatType(int pos);
+	static native void addCheat(String description, String code);
+	static native void updateCheat(String description, String code, int pos);
+	static native void saveCheats();
+	static native void setCheatEnabled(int pos, boolean enabled);
+	static native void deleteCheat(int pos);
+	
 	
 	static boolean touchScreenMode = false;
 	static boolean inited = false;

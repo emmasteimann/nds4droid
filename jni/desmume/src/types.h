@@ -90,7 +90,11 @@
 #define DS_ALIGN(X)
 #endif
 
+#ifdef __arm__
+#define CACHE_ALIGN DS_ALIGN(64)
+#else
 #define CACHE_ALIGN DS_ALIGN(32)
+#endif
 
 //use this for example when you want a byte value to be better-aligned
 #define FAST_ALIGN DS_ALIGN(4)

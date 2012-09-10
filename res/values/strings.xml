@@ -101,12 +101,21 @@
     <string name="R">R</string>
     <string name="Touch">Touch</string>
     
-    <!-- Release 9 -->
+    <!-- Release 10 -->
     <string name="DontRotateLCDs">Don\'t rotate LCDs</string>
     <string name="DontRotateLCDsDesc">In landscape mode, don\'t rotate the game LCDs. Use this for games that were intended to played with the DS held sideways.</string>
     <string name="Language">Language</string>
     <string name="LanguageDesc">The language of the system. Multilingual ROMs use this setting. Changes will be applied on the next ROM load.</string>
     <string name="Gameplay">Gameplay</string>
+    
+    <!-- Release 11 -->
+    <string name="AddCheat">Add a new Action Replay cheat</string>
+    <string name="Cheats">Cheats</string>
+    <string name="Exit">Exit</string>
+    <string name="Edit">Edit</string>
+    <string name="Delete">Delete</string>
+    <string name="Description">Description</string>
+    <string name="Code">Code</string>
     
     <!-- Do not translate -->
     <string-array name="filternames">

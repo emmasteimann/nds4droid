@@ -41,6 +41,7 @@
 #include "video.h"
 #include "OpenArchive.h"
 #include "sndopensl.h"
+#include "cheatSystem.h"
 #ifdef HAVE_NEON
 #include "neontest.h"
 #endif
@@ -614,6 +615,7 @@ void JNI(restoreState, int slot)
 void loadSettings(JNIEnv* env)
 {
 	CommonSettings.num_cores = sysconf( _SC_NPROCESSORS_ONLN );
+	LOGI("%i cores detected", CommonSettings.num_cores); 
 	CommonSettings.advanced_timing = false;
 	CommonSettings.cheatsDisable = GetPrivateProfileBool(env,"General", "cheatsDisable", false, IniName);
 	CommonSettings.autodetectBackupMethod = GetPrivateProfileInt(env,"General", "autoDetectMethod", 0, IniName);
@@ -829,6 +831,84 @@ void JNI_NOARGS(touchScreenRelease)
 void JNI(setButtons, int l, int r, int up, int down, int left, int right, int a, int b, int x, int y, int start, int select)
 {
 	NDS_setPad(right, left, down, up, select, start, b, a, y, x, l, r, false, false);
+}
+
+jint JNI_NOARGS(getNumberOfCheats)
+{
+	return cheats == NULL ? 0 : cheats->getSize();
+}
+
+jstring JNI(getCheatName, int pos)
+{
+	if(cheats == NULL || pos < 0 || pos >= cheats->getSize())
+		return 0;
+	return env->NewStringUTF(cheats->getItemByIndex(pos)->description);
+}
+
+jboolean JNI(getCheatEnabled, int pos)
+{
+	if(cheats == NULL || pos < 0 || pos >= cheats->getSize())
+		return 0;
+	return cheats->getItemByIndex(pos)->enabled ? JNI_TRUE : JNI_FALSE;
+}
+
+jstring JNI(getCheatCode, int pos)
+{
+	if(cheats == NULL || pos < 0 || pos >= cheats->getSize())
+		return 0;
+	char buffer[1024] = {0};
+	cheats->getXXcodeString(*cheats->getItemByIndex(pos), buffer);
+	jstring ret = env->NewStringUTF(buffer);
+	return ret;
+}
+
+jint JNI(getCheatType, int pos)
+{
+	if(cheats == NULL || pos < 0 || pos >= cheats->getSize())
+		return 0;
+	return cheats->getItemByIndex(pos)->type;
+}
+
+void JNI(addCheat, jstring description, jstring code)
+{
+	if(cheats == NULL)
+		return;
+	jboolean isCopy;
+	const char* descBuff = env->GetStringUTFChars(description, &isCopy);
+	const char* codeBuff = env->GetStringUTFChars(code, &isCopy);
+	cheats->add_AR(codeBuff, descBuff, TRUE);
+	env->ReleaseStringUTFChars(description, descBuff);
+	env->ReleaseStringUTFChars(code, codeBuff);
+}
+
+void JNI(updateCheat, jstring description, jstring code, jint pos)
+{
+	if(cheats == NULL)
+		return;
+	jboolean isCopy;
+	const char* descBuff = env->GetStringUTFChars(description, &isCopy);
+	const char* codeBuff = env->GetStringUTFChars(code, &isCopy);
+	cheats->update_AR(codeBuff, descBuff, TRUE, pos);
+	env->ReleaseStringUTFChars(description, descBuff);
+	env->ReleaseStringUTFChars(code, codeBuff);
+}
+
+void JNI_NOARGS(saveCheats)
+{
+	if(cheats)
+		cheats->save();
+}
+
+void JNI(setCheatEnabled, int pos, jboolean enabled)
+{
+	if(cheats)
+		cheats->getItemByIndex(pos)->enabled = enabled == JNI_TRUE ? true : false;
+}
+
+void JNI(deleteCheat, jint pos)
+{
+	if(cheats)
+		cheats->remove(pos);
 }
 
 } //end extern "C"
