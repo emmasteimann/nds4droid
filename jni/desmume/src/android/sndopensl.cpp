@@ -46,8 +46,8 @@ SoundInterface_struct SNDOpenSL = {
 
 #define FAILED(X) (X) != SL_RESULT_SUCCESS
 
-static SLObjectItf engineObject = NULL;
-static SLEngineItf engineEngine;
+SLObjectItf engineObject = NULL;
+SLEngineItf engineEngine;
 static SLObjectItf outputMixObject = NULL;
 static SLObjectItf bqPlayerObject = NULL;
 static SLPlayItf bqPlayerPlay;
@@ -109,14 +109,17 @@ int SNDOpenSLInit(int buffersize)
 	
 	SLresult result;
 	
-    if(FAILED(result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL)))
-		return -1;
+	if(engineObject == NULL)
+	{
+		if(FAILED(result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL)))
+			return -1;
 
-    if(FAILED(result = (*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE)))
-		return -1;
+		if(FAILED(result = (*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE)))
+			return -1;
 
-    if(FAILED(result = (*engineObject)->GetInterface(engineObject, SL_IID_ENGINE, &engineEngine)))
-		return -1;
+		if(FAILED(result = (*engineObject)->GetInterface(engineObject, SL_IID_ENGINE, &engineEngine)))
+			return -1;
+	}
 
     const SLInterfaceID mixids[1] = {SL_IID_VOLUME};
     const SLboolean mixreq[1] = {SL_BOOLEAN_FALSE};
@@ -176,7 +179,7 @@ int SNDOpenSLInit(int buffersize)
 	memset(empty.data, 0, soundbufsize);
 	muted = false;
 	currentlyPlaying = false;
-	LOGI("OpenSL created");
+	LOGI("OpenSL created (for audio output)");
 	return 0;
 }
 
@@ -192,10 +195,10 @@ void SNDOpenSLDeInit()
         outputMixObject = NULL;
 	}
 	
-	if (engineObject != NULL) {
+	/*if (engineObject != NULL) {
         (*engineObject)->Destroy(engineObject);
 		engineObject = NULL;
-	}
+	}*/
 }
 
 void SNDOpenSLUpdateAudio(s16 *buffer, u32 num_samples)

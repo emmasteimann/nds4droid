@@ -31,8 +31,9 @@
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
 
-static SLObjectItf engineObject = NULL;
-static SLEngineItf engineEngine;
+extern SLObjectItf engineObject;
+extern SLEngineItf engineEngine;
+
 static SLObjectItf recorderObject = NULL;
 static SLRecordItf recorderRecord = NULL;
 static SLAndroidSimpleBufferQueueItf bqRecordBufferQueue;
@@ -107,10 +108,10 @@ void Mic_DeInit()
 		recorderObject = NULL;
 	}
 	
-	if (engineObject != NULL) {
+	/*if (engineObject != NULL) {
         (*engineObject)->Destroy(engineObject);
 		engineObject = NULL;
-	}
+	}*/
 	
 	Mic_Inited = FALSE;
 }
@@ -131,16 +132,19 @@ BOOL Mic_Init()
 	
 	Mic_Inited = FALSE;
 	
-    if(FAILED(result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL)))
-		return FALSE;
+	//Some devices silently (literally haha) fail if you create multiple OpenSL ES instances.
+	//So now we share it with the regular audio output driver
+	if(engineObject == NULL)
+	{
+		if(FAILED(result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL)))
+			return FALSE;
 
-    if(FAILED(result = (*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE)))
-		return FALSE;
+		if(FAILED(result = (*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE)))
+			return FALSE;
 
-    if(FAILED(result = (*engineObject)->GetInterface(engineObject, SL_IID_ENGINE, &engineEngine)))
-		return FALSE;
-		
-	LOGI("Created OpenSL ES (for audio input)");
+		if(FAILED(result = (*engineObject)->GetInterface(engineObject, SL_IID_ENGINE, &engineEngine)))
+			return FALSE;
+	}
 
 		
 	SLDataLocator_IODevice loc_dev = {SL_DATALOCATOR_IODEVICE,
@@ -183,6 +187,7 @@ BOOL Mic_Init()
 	
 	bqRecorderCallback(bqRecordBufferQueue, NULL);
 	
+	LOGI("OpenSL created (for audio input)");
 	return Mic_Inited = TRUE;
 }
 
