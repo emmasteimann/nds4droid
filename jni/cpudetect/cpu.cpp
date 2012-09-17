@@ -20,19 +20,30 @@
 
 #define JNI_NOARGS(X) Java_com_opendoorstudios_ds4droid_DeSmuME_##X(JNIEnv* env, jclass* clazz)
 
+#define CPUTYPE_COMPAT 0
+#define CPUTYPE_V7 1
+#define CPUTYPE_NEON 2
+
 extern "C"
 {
 
-jboolean JNI_NOARGS(useNeon)
+jint JNI_NOARGS(getCPUType)
 {
-	if (android_getCpuFamily() == ANDROID_CPU_FAMILY_ARM &&
-        (android_getCpuFeatures() & ANDROID_CPU_ARM_FEATURE_NEON) != 0)
+	AndroidCpuFamily cpuFamily = android_getCpuFamily();
+	uint64_t cpuFeatures = android_getCpuFeatures();
+	if (cpuFamily == ANDROID_CPU_FAMILY_ARM &&
+        (cpuFeatures & ANDROID_CPU_ARM_FEATURE_NEON) != 0)
     {
-		return JNI_TRUE;
+		return CPUTYPE_NEON;
     }
+	else if (cpuFamily == ANDROID_CPU_FAMILY_ARM &&
+        (cpuFeatures & ANDROID_CPU_ARM_FEATURE_ARMv7) != 0)
+	{
+		return CPUTYPE_V7;
+	}
     else
     {
-        return JNI_FALSE;
+        return CPUTYPE_COMPAT;
     }
 }
 

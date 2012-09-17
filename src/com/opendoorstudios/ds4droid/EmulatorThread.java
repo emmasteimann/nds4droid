@@ -72,6 +72,7 @@ class EmulatorThread extends Thread {
 		paused.set(set);
 		if(DeSmuME.inited) {
 			DeSmuME.setSoundPaused(set ? 1 : 0);
+			DeSmuME.setMicPaused(set ? 1 : 0);
 			soundPaused = set;
 		}
 		synchronized(dormant) {
@@ -119,6 +120,8 @@ class EmulatorThread extends Thread {
 			}
 			if(pendingRomLoad != null) {
 				activity.msgHandler.sendEmptyMessage(MainActivity.LOADING_START);
+				if(DeSmuME.romLoaded)
+					DeSmuME.closeRom();
 				if(!DeSmuME.loadRom(pendingRomLoad)) {
 					activity.msgHandler.sendEmptyMessage(MainActivity.LOADING_END);
 					activity.msgHandler.sendEmptyMessage(MainActivity.ROM_ERROR);
@@ -144,6 +147,7 @@ class EmulatorThread extends Thread {
 				
 				if(soundPaused) {
 					DeSmuME.setSoundPaused(0);
+					DeSmuME.setMicPaused(0);
 					soundPaused = false;
 				}
 				

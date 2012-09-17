@@ -117,6 +117,12 @@
     <string name="Description">Description</string>
     <string name="Code">Code</string>
     
+    <!-- Release 12 -->
+    <string name="EnableMicrophone">Enable microphone</string>
+    <string name="EnableMicrophoneDesc">Use your device\'s microphone as the DS microphone.</string>
+    <string name="AlwaysTouch">Always allow touch</string>
+    <string name="AlwaysTouchDesc">Always process the DS touchscreen, even when not in touch mode. For games that require using controls and touchscreen at the same time.</string>
+    
     <!-- Do not translate -->
     <string-array name="filternames">
         <item>Normal</item>

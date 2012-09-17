@@ -295,6 +295,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			view.buttonAlpha = (int)(prefs.getInt(Settings.BUTTON_TRANSPARENCY, 78) * 2.55f);
 			view.haptic = prefs.getBoolean(Settings.HAPTIC, false);
 			view.dontRotate = prefs.getBoolean(Settings.DONT_ROTATE_LCDS, false);
+			view.alwaysTouch = prefs.getBoolean(Settings.ALWAYS_TOUCH, false);
 			
 			controls.loadMappings(this);
 			
@@ -334,6 +335,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 		public boolean forceTouchScreen = false;
 		public int buttonAlpha = 78;
 		public boolean haptic = true;
+		public boolean alwaysTouch = false;
 		
 		public NDSView(Context context) {
 			super(context);

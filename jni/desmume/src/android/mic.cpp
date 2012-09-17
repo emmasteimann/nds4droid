@@ -26,23 +26,203 @@
 
 #include "../mic.h"
 #include "readwrite.h"
+#include "main.h"
+
+#include <SLES/OpenSLES.h>
+#include <SLES/OpenSLES_Android.h>
+
+static SLObjectItf engineObject = NULL;
+static SLEngineItf engineEngine;
+static SLObjectItf recorderObject = NULL;
+static SLRecordItf recorderRecord = NULL;
+static SLAndroidSimpleBufferQueueItf bqRecordBufferQueue;
+static bool samplesReady = false;
+
+#define MAX_NUMBER_INTERFACES 5 
+#define MAX_NUMBER_INPUT_DEVICES 3
+
+#define FAILED(X) (X) != SL_RESULT_SUCCESS
+
+#define MIC_BUFSIZE 2048
+
+static BOOL Mic_Inited = FALSE;
+
+static s16 Mic_Buffer[2][MIC_BUFSIZE];
+
+static int fullBuffer = -1;
+static int recordingBuffer = -1;
+static int fullBufferPos = 0;
+
+#define JNI(X,...) Java_com_opendoorstudios_ds4droid_DeSmuME_##X(JNIEnv* env, jclass* clazz, __VA_ARGS__)
+#define JNI_NOARGS(X) Java_com_opendoorstudios_ds4droid_DeSmuME_##X(JNIEnv* env, jclass* clazz)
+
+bool enableMicrophone = false;
+
+int lastBufferTime;
+
+void bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
+{
+	int nextBuffer = recordingBuffer == 1 ? 0 : 1;
+	(*bqRecordBufferQueue)->Enqueue(bqRecordBufferQueue, Mic_Buffer[nextBuffer], MIC_BUFSIZE * sizeof(s16));
+	if(recordingBuffer != -1)
+	{
+		fullBufferPos = 0;
+		fullBuffer = recordingBuffer;
+		float bufferTime = GetTickCount() - lastBufferTime;
+		bufferTime = 1000.0 / bufferTime;
+		bufferTime *= MIC_BUFSIZE;
+		//LOGI("Approx mic sample rate is %d", (int)bufferTime);
+	}
+	recordingBuffer = nextBuffer;
+	lastBufferTime = GetTickCount();
+}
+
+extern "C"
+{
+
+void JNI(setMicPaused, int set)
+{
+	if(Mic_Inited == TRUE)
+	{
+		if(set == 1)
+		{
+			(*recorderRecord)->SetRecordState(recorderRecord,SL_RECORDSTATE_PAUSED);
+		}
+		else 
+		{
+			Mic_Reset();
+			(*recorderRecord)->SetRecordState(recorderRecord,SL_RECORDSTATE_RECORDING);
+			bqRecorderCallback(bqRecordBufferQueue, NULL);
+		}
+	}
+
+}
+
+}
 
 void Mic_DeInit()
 {
+	if (recorderObject != NULL) {
+        (*recorderObject)->Destroy(recorderObject);
+		recorderObject = NULL;
+	}
+	
+	if (engineObject != NULL) {
+        (*engineObject)->Destroy(engineObject);
+		engineObject = NULL;
+	}
+	
+	Mic_Inited = FALSE;
 }
 
 BOOL Mic_Init()
 {
-	return FALSE;
+	if(!enableMicrophone)
+		return FALSE;
+	if(Mic_Inited == TRUE)
+		return TRUE;
+	SLresult result;
+	SLuint32 InputDeviceIDs[MAX_NUMBER_INPUT_DEVICES]; 
+	SLint32   numInputs = 0; 
+	SLboolean mic_available = SL_BOOLEAN_FALSE; 
+	SLuint32 mic_deviceID = 0; 
+	SLAudioIODeviceCapabilitiesItf AudioIODeviceCapabilitiesItf; 
+	SLAudioInputDescriptor        AudioInputDescriptor;
+	
+	Mic_Inited = FALSE;
+	
+    if(FAILED(result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL)))
+		return FALSE;
+
+    if(FAILED(result = (*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE)))
+		return FALSE;
+
+    if(FAILED(result = (*engineObject)->GetInterface(engineObject, SL_IID_ENGINE, &engineEngine)))
+		return FALSE;
+		
+	LOGI("Created OpenSL ES (for audio input)");
+
+		
+	SLDataLocator_IODevice loc_dev = {SL_DATALOCATOR_IODEVICE,
+                      SL_IODEVICE_AUDIOINPUT,
+                      SL_DEFAULTDEVICEID_AUDIOINPUT, NULL};
+	SLDataSource audioSrc = {&loc_dev, NULL};
+
+	SLDataLocator_AndroidSimpleBufferQueue loc_bq = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
+	
+	//it seems that at least on my phone (galaxy nexus) the mic samples are always 16 bits, regardless of what you ask for
+	//the sampling rate does seem to be honored, though
+	SLDataFormat_PCM format_pcm = {SL_DATAFORMAT_PCM, 1, SL_SAMPLINGRATE_16,
+			  SL_PCMSAMPLEFORMAT_FIXED_16 , SL_PCMSAMPLEFORMAT_FIXED_16 ,
+			  SL_SPEAKER_FRONT_CENTER, SL_BYTEORDER_LITTLEENDIAN};
+			  
+	SLDataSink audioSnk = {&loc_bq, &format_pcm};
+	
+	const SLInterfaceID id[1] = {SL_IID_ANDROIDSIMPLEBUFFERQUEUE};
+	const SLboolean req[1] = {SL_BOOLEAN_TRUE};
+	
+	if(FAILED(result = (*engineEngine)->CreateAudioRecorder(engineEngine, &recorderObject, &audioSrc, &audioSnk, 1, id, req)))
+		return FALSE;
+
+	if(FAILED(result = (*recorderObject)->Realize(recorderObject, SL_BOOLEAN_FALSE)))
+		return FALSE;
+
+	if(FAILED(result = (*recorderObject)->GetInterface(recorderObject, SL_IID_RECORD, &recorderRecord)))
+		return FALSE;
+		
+	if(FAILED(result = (*recorderObject)->GetInterface(recorderObject, SL_IID_ANDROIDSIMPLEBUFFERQUEUE, &bqRecordBufferQueue)))
+		return FALSE;
+		
+	if(FAILED(result = (*bqRecordBufferQueue)->RegisterCallback(bqRecordBufferQueue, bqRecorderCallback, NULL)))
+		return FALSE;
+		
+	if(FAILED(result = (*recorderRecord)->SetRecordState(recorderRecord,SL_RECORDSTATE_RECORDING)))
+		return FALSE;
+		
+	Mic_Reset();
+	
+	bqRecorderCallback(bqRecordBufferQueue, NULL);
+	
+	return Mic_Inited = TRUE;
 }
 
 void Mic_Reset()
 {
+	recordingBuffer = fullBuffer = -1;
+	fullBufferPos = 0;
+	
+	if(!Mic_Inited)
+		return;
+
+	memset(Mic_Buffer[0], 0x80, MIC_BUFSIZE);
+	memset(Mic_Buffer[1], 0x80, MIC_BUFSIZE);
 }
 
 u8 Mic_ReadSample()
 {
-	return 0;
+	u8 ret = 0;
+	if(Mic_Inited == TRUE && fullBuffer != -1)
+	{
+		const s16 original = Mic_Buffer[fullBuffer][fullBufferPos >> 1];
+		s16 sixteen = original;
+		sixteen /= 256;//16 bit -> 8 bit
+		u8 tmp = sixteen; 
+		tmp += 128; //pcm 8 bit encoding midpoint is 127, while it's signed 0 for 16-bit
+		if(fullBufferPos & 0x1)
+		{
+			ret = ((tmp & 0x1) << 7);
+		}
+		else
+		{
+			ret = ((tmp & 0xFE) >> 1);
+		}
+		if(fullBufferPos != (MIC_BUFSIZE-1))
+			++fullBufferPos;
+		//LOGI("Sound: original = %d, tmp = %x, ret = %x", (int)original, (int)tmp, (int)ret);
+		
+	}
+	return ret;
+
 }
 
 void mic_savestate(EMUFILE* os)

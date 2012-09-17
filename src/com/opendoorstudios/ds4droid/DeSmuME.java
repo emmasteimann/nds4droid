@@ -30,22 +30,34 @@ class DeSmuME {
 	
 	static boolean loaded = false;
 	
+	static final int CPUTYPE_COMPAT =  0;
+	static final int CPUTYPE_V7 = 1;
+	static final int CPUTYPE_NEON = 2;
+	
 	static void load()
 	{
 		if(loaded)
 			return;
 		System.loadLibrary("cpudetect");
-		if(useNeon()) {
+		final int cpuType = getCPUType();
+		switch(cpuType) {
+		case CPUTYPE_NEON:
 			System.loadLibrary("desmumeneon");
 			Log.i(MainActivity.TAG, "Using NEON enhanced native library");
-		}
-		else {
+			break;
+		case CPUTYPE_V7:
+			System.loadLibrary("desmumev7");
+			Log.i(MainActivity.TAG, "Using ARMv7 native library");
+			break;
+		default:
 			System.loadLibrary("desmumecompat");
 			Log.i(MainActivity.TAG, "Using compatibility native library");
+			break;
 		}
+		loaded = true;
 	}
 	
-	static native boolean useNeon();
+	static native int getCPUType();
 	static native void init();
 	static native void runCore();
 	static native int runOther();
@@ -78,7 +90,8 @@ class DeSmuME {
 	static native void saveCheats();
 	static native void setCheatEnabled(int pos, boolean enabled);
 	static native void deleteCheat(int pos);
-	
+	static native void setMicPaused(int set);
+	static native void closeRom();
 	
 	static boolean touchScreenMode = false;
 	static boolean inited = false;

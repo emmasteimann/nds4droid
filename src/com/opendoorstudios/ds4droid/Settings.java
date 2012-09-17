@@ -104,6 +104,8 @@ public class Settings extends PreferenceActivity {
 			edit.putInt(BUTTON_TRANSPARENCY, 78);
 		if(overwrite || !prefs.contains(HAPTIC))
 			edit.putBoolean(HAPTIC, false);
+		if(overwrite || !prefs.contains(ALWAYS_TOUCH))
+			edit.putBoolean(ALWAYS_TOUCH, false);
 		edit.apply();
 	}
 	
@@ -138,6 +140,8 @@ public class Settings extends PreferenceActivity {
 	public static final String MAPPING_TOUCH = "Controls.KeyMap.Touch";
 	public static final String DONT_ROTATE_LCDS = "WindowRotate";
 	public static final String LANGUAGE = "Language";
+	public static final String ENABLE_MICROPHONE = "EnableMicrophone";
+	public static final String ALWAYS_TOUCH = "Controls.AlwaysTouch";
 	
 	static void applyMappingDefaults(SharedPreferences prefs, boolean overwrite) {
 		final SharedPreferences.Editor editor = prefs.edit();
@@ -193,6 +197,8 @@ public class Settings extends PreferenceActivity {
 			editor.putBoolean(LCD_SWAP, false);
 		if(!prefs.contains(DONT_ROTATE_LCDS))
 			editor.putBoolean(DONT_ROTATE_LCDS, false);
+		if(!prefs.contains(ENABLE_MICROPHONE))
+			editor.putBoolean(ENABLE_MICROPHONE, true);
 		if(!prefs.contains(LANGUAGE)) {
 			final String userLanguage = Locale.getDefault().getISO3Language();
 			int lang = 1; //english

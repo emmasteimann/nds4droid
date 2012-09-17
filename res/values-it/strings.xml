@@ -1,94 +1,94 @@
 <resources>
-
+    
 	<!-- Release 1 -->
     <string name="app_name">nds4droid</string>
     <string name="hello_world">Ciao mondo!</string>
-    <string name="menu_settings">Impostazioni menu</string>
+    <string name="menu_settings">Impostazioni</string>
     <string name="title_activity_main">nds4droid</string>
 	<string-array name="file_options">
-		<!--item>Rinomina</item--> 
+		<!--item>Rename</item--> 
 		<item>Cancella</item>
-		<!--item>Taglia</item-->
-		<!--item>Copia</item-->
-		<item>Incolla in...</item>
+		<!--item>Cut</item-->
+		<!--item>Copy</item-->
+		<item>Invia a...</item>
 	</string-array>
-	<string name="rom_error">Qualcosa non va bene con la rom :/</string>
+	<string name="rom_error">C\'è stato un errore caricando la rom :(</string>
 	<string name="OK">OK</string>
-	<string name="location">Luogo</string>
-    <string name="cant_read_folder">Non è possibile leggere la cartella</string>
+	<string name="location">Posizione</string>
+     <string name="cant_read_folder">La cartella non può essere letta</string>
     <string name="nnew">Nuovo</string>
-    <string name="select">mettere</string>
-    <string name="file_name">Nome dell\'archivio:</string>
-    <string name="cancel">Anulla</string>
-    <string name="create">Salvare dati</string>
-    <string name="no_data">Non cisono dati</string>
+    <string name="select">Seleziona</string>
+    <string name="file_name">Nome del file:</string>
+    <string name="cancel">Annulla</string>
+    <string name="create">Salva</string>
+    <string name="no_data">Niente dati</string>
     <color name="gray">#ffff0000</color>
     <string name="err">Errore</string>
-    <string name="Load">Scegliere gioco</string>
-    <string name="QuickSave">Salvare veloce</string>
+    <string name="Load">Carica</string>
+    <string name="QuickSave">Salvataggio veloce</string>
     <string name="QuickRestore">Ripristino veloce</string>
-    <string name="SaveState">Salvare stato</string>
-    <string name="RestoreState">Ripristinare stato</string>
+    <string name="SaveState">Salva Stato</string>
+    <string name="RestoreState">Ripristina Stato</string>
     <string name="Settings">Impostazioni</string>
-
+    
     <!-- Release 2 -->
-    <string name="touchnotify">Per scegliere tra, touch e buttons, touchare il cerchio touch in mezzo a L e R.</string>
-    <string name="frameskip">Saltare Frames</string>
-    <string name="frameskipdesc">Saltare frames ti aiuta a raggiungere la velocità originale del gioco.</string>
+    <string name="touchnotify">Per cambiare tra modalità touch e modalità keypad, tocca il tasto "touch" alla cima</string>
+    <string name="frameskip">Salta fotogrammi</string>
+    <string name="frameskipdesc">Quanti fotogrammi saltare mentre si emula. Aiuta a far corrispondere l\'emulazione lenta al tempo reale.</string>
     <string name="vsync">VSync</string>
-    <string name="vsyncdesc">Disegna tra un frame e l\'altro. Può rallentare l\'emulazione però spegnere può causare disfunzioni grafiche.</string>
+    <string name="vsyncdesc">Disegna solamente allo scherzo tra i fotogrammi. Può rallentare l\'emulazione ma disabilitare può causare problem grafici.</string>
     <string name="fps">Mostra FPS</string>
-    <string name="fpsdesc">Mostra "frames per second" mentre giochi</string>
-    <string name="showtouchmsg">Mostra messagio touch</string>
-    <string name="showtouchmsgdesc">Messagio mentre scegli tra touch e buttons.</string>
-
+    <string name="fpsdesc">Mostra gli FPS sullo schermo.</string>
+    <string name="showtouchmsg">Mostra messaggio touch</string>
+    <string name="showtouchmsgdesc">Mostra un messaggio all\'utente spiegando il cambio di modalità tra touch/keypad.</string>
+    
     <!-- Release 3 -->
-    <string name="loading">Caricamenro</string>    
-
+    <string name="loading">Caricamento</string>    
+    
     <!-- Release 4 -->
-    <string name="filter">Filtro Schermo</string>
-    <string name="filterdesc">Filtro quando aumentando la risoluzione dello schermo nds. Aumentando rallenta la performance.</string>
-
+    <string name="filter">Filtro dello schermo</string>
+    <string name="filterdesc">Il filtro da usare quando si aumenta dalla risoluzione del Nintendo DS alla risoluzione del tuo schermo. I filtri con una qualità piú alta potrebbero peggiorare la performance.</string>
+    
     <!-- Release 5 -->
-    <string name="threedrenderer">Supporto 3D</string>
-    <string name="threedrendererdesc">Qualle driver 3D vuoi usare?</string>
+    <string name="threedrenderer">Renderer 3D</string>
+    <string name="threedrendererdesc">Quale motore di rendering 3D usare.</string>
     <string-array name ="threed_options">
-        <item>Nessun</item>
+        <item>Nessuno</item>
         <item>OpenGL</item>
-        <item>Sistema</item>
+        <item>Software</item>
     </string-array>
-    <string name="sound">Ativare audio</string>
-    <string name="sounddesc">Ativare processo e riproduzione áudio. Desativare può migliorare la performance.</string>
-    <string name="showsoundmsg">Sound on</string>
-    <string name="showsoundmsgdesc">Mostrare una domanda all\'user prima di attivare la riproduzione dell\'audio.</string>
-    <string name="soundmsg">Sei sicuro di voler attivare l\'audio? Ativare può causare perdere di 3 a 5 Frames per secondo.</string>
-    <string name="yes">Sì</string>
+    <string name="sound">Abilita suono</string>
+    <string name="sounddesc">Abilita l\'elaborazione ed il playback del suono. Disabilitare può aumentare la performance.</string>
+    <string name="showsoundmsg">Mostra messaggio audio</string>
+    <string name="showsoundmsgdesc">Mostra una domanda all\'utente chiedendo se vogliono abilitare il suono.</string>
+    <string name="soundmsg">Vorresti abilitare il suono? Questo può causare una perdita di performance da 3 a 5 FPS.</string>
+    <string name="yes">Si</string>
     <string name="no">No</string>
     
     <!-- Release 8 -->
     <string name="Display">Display</string>
-    <string name="Controls">Controls</string>
-    <string name="EditLayout">Editare il modo dei controls</string>
-    <string name="EditLayoutDesc">Edite a posição dos controles</string>
-    <string name="UseTouchPort">Modo de retratação</string>
-    <string name="UseTouchPortDesc">Use controles em modo de retratação.</string>
-    <string name="UseTouchLand">Modo de visualização</string>
-    <string name="UseTouchLandDesc">Use controles maiores.</string>
-    <string name="ResetLayout">Resetar controles</string>
-    <string name="ResetLayoutDesc">Resetar configurações dos controles.</string>
-    <string name="Sound">Som</string>
-    <string name="LCDSwap">Trocar LCDs</string>
-    <string name="LCDSwapDesc">Troque a localização da tela touch e a tela normal.</string>
-    <string name="ButtonTrans">Transparência dos botões</string>
-    <string name="ButtonTransDesc">Transparência dos botões na tela.</string>
-    <string name="Haptic">Haptic feedback</string>
-    <string name="HapticDesc">Fornece Haptic feedback se o aparelho suportar.</string>
-    <string name="KeymapDialogDesc">Presione uma tecla para mapear o botão</string>
-    <string name="KeymapValuePreface">Atualmente mapeado em...</string>
-    <string name="EditKeymap">Editar mapeamentos de teclas</string>
-    <string name="EditKeymapDesc">Use o mapeamento das teclas do seu celular para usar no DS.</string>
-    <string name="Up">Sopra</string>
-    <string name="Down">Sotto</string>
+    <string name="Controls">Controlli</string>
+    <string name="EditLayout">Modifica layout controlli</string>
+    <string name="EditLayoutDesc">Modifica dove i controlli touch soon piazzati sully schermo.</string>
+    <string name="UseTouchPort">Tasti touch in modalità verticale</string>
+    <string name="UseTouchPortDesc">Usa i tasti touch sullo schermo in modalità verticale.</string>
+    <string name="UseTouchLand">Tasti touch in modalità orizzontale</string>
+    <string name="UseTouchLandDesc">Usa i tasti touch in modalità orizzontale.</string>
+    <string name="ResetLayout">Resetta il layout dei controlli</string>
+    <string name="ResetLayoutDesc">Resetta il layout dei tasti touch nel loro default.</string>
+    <string name="Sound">Suono</string>
+    <string name="LCDSwap">Inverti gli LCD</string>
+    <string name="LCDSwapDesc">Abilita per invertire la posizione degli LCD principale e touch.</string>
+    <string name="ButtonTrans">Transparenza tasti</string>
+    <string name="ButtonTransDesc">Quanto transparenti i tasti touch sullo schermo devono essere</string>
+    <string name="Haptic">Feedback Aptico</string>
+    <string name="HapticDesc">Abilita feedback aptico su tocco tasti se supportato dal dispositivo.</string>
+    <string name="KeymapDialogDesc">Premi un tasto per associare questo tasto</string>
+    <string name="KeymapValuePreface">Attualmente impostato su</string>
+    <string name="EditKeymap">Modifica associazioni tasti</string>
+    <string name="EditKeymapDesc">Modifica associazioni da tasti hardware a tasti DS.</string>
+    <string name="Up">Su</string>
+    <string name="Down">Giu</string>
     <string name="Left">Sinistra</string>
     <string name="Right">Destra</string>
     <string name="A">A</string>
@@ -99,7 +99,23 @@
     <string name="Start">Select</string>
     <string name="L">L</string>
     <string name="R">R</string>
-    <string name="Touch">Touch</string>
+    <string name="Touch">Tocco</string>
+    
+    <!-- Release 10 -->
+    <string name="DontRotateLCDs">Non ruotare lcd</string>
+    <string name="DontRotateLCDsDesc">In modalità orizzontale, non ruotare gli LCD del gioco. Usalo per i giochi che soon progettati per giocarci con il DS tenuto lateralmente.</string>
+    <string name="Language">Linguaggio</string>
+    <string name="LanguageDesc">Il linguaggio del sistema. Le ROM multilingual usano questa impostazione. I cambiamenti verranno impostati sul prossimo caricamento di ROM.</string>
+    <string name="Gameplay">Gameplay</string>
+    
+    <!-- Release 11 -->
+    <string name="AddCheat">Aggiungi un nuovo trucco Action Replay</string>
+    <string name="Cheats">Trucchi</string>
+    <string name="Exit">Esci</string>
+    <string name="Edit">Modifica</string>
+    <string name="Delete">Cancella</string>
+    <string name="Description">Descrizione</string>
+    <string name="Code">Codice</string>
     
     <!-- Do not translate -->
     <string-array name="filternames">
@@ -158,6 +174,22 @@
         <item>0</item>
         <item>1</item>
         <item>2</item>
+    </string-array>
+    <string-array name="languages">
+        <item>日本語</item>
+        <item>English</item>
+        <item>Français</item>
+        <item>Deutsch</item>
+        <item>Italiano</item>
+        <item>Español</item>
+    </string-array>
+    <string-array name="zerothroughfive">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
     </string-array>
     
 </resources>

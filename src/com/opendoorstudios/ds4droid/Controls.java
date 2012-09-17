@@ -173,60 +173,63 @@ class Controls {
 	final ArrayList<Button> buttonsToDraw = new ArrayList<Button>();
 	final ArrayList<Button> buttonsToProcess = new ArrayList<Button>();
 	
+	boolean touchScreenProcess(MotionEvent event) {
+		switch(event.getAction()) {
+		case MotionEvent.ACTION_DOWN:
+		case MotionEvent.ACTION_MOVE:
+			float x = event.getX();
+			float y = event.getY();
+			x /= xscale;
+			y /= yscale;
+			//convert to bottom touch screen coordinates
+			if(landscape && view.dontRotate) {
+				final float newy = x / 1.33f;
+				final float newx = (192 - y) * 1.33f;
+				x = newx;
+				y = newy;
+			}
+			if(landscape && !view.dontRotate) {
+				if(!view.lcdSwap) {
+					x -= 256;
+					if(x >= 0)
+						DeSmuME.touchScreenTouch((int)x, (int)y);
+				}
+				else {
+					if(x < 256)
+						DeSmuME.touchScreenTouch((int)x, (int)y);
+				}
+			}
+			else {
+				if(!view.lcdSwap) {
+					y -= 192;
+					if(y >= 0)
+						DeSmuME.touchScreenTouch((int)x, (int)y);
+				}
+				else {
+					if(y < 192)
+						DeSmuME.touchScreenTouch((int)x, (int)y);
+				}
+			}
+		
+			break;
+		case MotionEvent.ACTION_UP:
+		case MotionEvent.ACTION_CANCEL:
+			DeSmuME.touchScreenRelease();
+			if(touchButton.bitmap != null && !view.forceTouchScreen && touchButton.position.contains((int)event.getX(), (int)event.getY())) {
+				DeSmuME.touchScreenMode = false;
+			}
+			break;
+		default:
+			return false;
+		}
+		return true;		
+	}
+	
 	boolean onTouchEvent(MotionEvent event) {
 		if(xscale == 0 || yscale == 0)
 			return false;
-		if(DeSmuME.touchScreenMode || view.forceTouchScreen) {
-			switch(event.getAction()) {
-			case MotionEvent.ACTION_DOWN:
-			case MotionEvent.ACTION_MOVE:
-				float x = event.getX();
-				float y = event.getY();
-				x /= xscale;
-				y /= yscale;
-				//convert to bottom touch screen coordinates
-				if(landscape && view.dontRotate) {
-					final float newy = x / 1.33f;
-					final float newx = (192 - y) * 1.33f;
-					x = newx;
-					y = newy;
-				}
-				if(landscape && !view.dontRotate) {
-					if(!view.lcdSwap) {
-						x -= 256;
-						if(x >= 0)
-							DeSmuME.touchScreenTouch((int)x, (int)y);
-					}
-					else {
-						if(x < 256)
-							DeSmuME.touchScreenTouch((int)x, (int)y);
-					}
-				}
-				else {
-					if(!view.lcdSwap) {
-						y -= 192;
-						if(y >= 0)
-							DeSmuME.touchScreenTouch((int)x, (int)y);
-					}
-					else {
-						if(y < 192)
-							DeSmuME.touchScreenTouch((int)x, (int)y);
-					}
-				}
-			
-				break;
-			case MotionEvent.ACTION_UP:
-			case MotionEvent.ACTION_CANCEL:
-				DeSmuME.touchScreenRelease();
-				if(touchButton.bitmap != null && !view.forceTouchScreen && touchButton.position.contains((int)event.getX(), (int)event.getY())) {
-					DeSmuME.touchScreenMode = false;
-				}
-				break;
-			default:
-				return false;
-			}
-			return true;				
-		}
+		if(DeSmuME.touchScreenMode || view.forceTouchScreen) 
+			return touchScreenProcess(event);	
 		else
 		{
 			switch(event.getActionMasked()) {
@@ -234,26 +237,32 @@ class Controls {
 			case MotionEvent.ACTION_POINTER_DOWN:
 			case MotionEvent.ACTION_MOVE:
 			{
-					int i = event.getActionIndex();
-					int id = event.getPointerId(i);
+				int i = event.getActionIndex();
+				int id = event.getPointerId(i);
+				
+				final Button existingTouch = activeTouches.get(id);
+				if(existingTouch != null) {
+					//reset touch, it may get re-set below but we need to deal with sliding off a button
+					existingTouch.apply(buttonStates, false);
+				}
+				int x = (int) event.getX(i);
+				int y = (int) event.getY(i);
+				
+				boolean pressedButton = false;
+				for(Button process : buttonsToProcess) {
+					if(process.position.contains(x, y)) {
+						process.apply(buttonStates, true);
+						activeTouches.put(id, process);
+						if(view.haptic && (event.getActionMasked() != MotionEvent.ACTION_MOVE))
+							view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+						pressedButton = true;
+						break;
+					}
+				}
+				
+				if(!pressedButton && view.alwaysTouch) 
+					return touchScreenProcess(event);
 					
-					final Button existingTouch = activeTouches.get(id);
-					if(existingTouch != null) {
-						//reset touch, it may get re-set below but we need to deal with sliding off a button
-						existingTouch.apply(buttonStates, false);
-					}
-					int x = (int) event.getX(i);
-					int y = (int) event.getY(i);
-
-					for(Button process : buttonsToProcess) {
-						if(process.position.contains(x, y)) {
-							process.apply(buttonStates, true);
-							activeTouches.put(id, process);
-							if(view.haptic && (event.getActionMasked() != MotionEvent.ACTION_MOVE))
-								view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
-							break;
-						}
-					}
 			}
 				break;
 			case MotionEvent.ACTION_UP:
@@ -263,6 +272,8 @@ class Controls {
 					activeTouches.clear();
 					break;
 				}
+				if(view.alwaysTouch)
+					touchScreenProcess(event);
 				//FT
 			case MotionEvent.ACTION_CANCEL:
 			{

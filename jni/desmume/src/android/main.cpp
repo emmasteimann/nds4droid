@@ -84,6 +84,7 @@ EGLContext context;
 const char* IniName = NULL;
 char androidTempPath[1024];
 bool useMmapForRomLoading;
+extern bool enableMicrophone;
 
 extern "C" {
 
@@ -648,6 +649,7 @@ void loadSettings(JNIEnv* env)
 	CommonSettings.GFX3D_LineHack = GetPrivateProfileBool(env, "3D", "EnableLineHack", 0, IniName);
 	useMmapForRomLoading = GetPrivateProfileBool(env, "General", "UseMmap", true, IniName);
 	fw_config.language = GetPrivateProfileInt(env, "Firmware","Language", 1, IniName);
+	enableMicrophone = GetPrivateProfileBool(env, "General", "EnableMicrophone", true, IniName);
 }
 
 void JNI_NOARGS(reloadFirmware)
@@ -909,6 +911,14 @@ void JNI(deleteCheat, jint pos)
 {
 	if(cheats)
 		cheats->remove(pos);
+}
+
+void JNI_NOARGS(closeRom)
+{
+	NDS_FreeROM();
+	execute = false;
+	Hud.resetTransient();
+	NDS_Reset();
 }
 
 } //end extern "C"

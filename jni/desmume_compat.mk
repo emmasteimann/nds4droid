@@ -109,5 +109,3 @@ LOCAL_LDLIBS 			:= -llog -lz -lGLESv1_CM -lEGL -ljnigraphics -lOpenSLES -landroi
 
 include $(BUILD_SHARED_LIBRARY)
 
-include $(MY_LOCAL_PATH)/desmume/src/android/agg/agg_compat.mk
-
