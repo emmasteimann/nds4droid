@@ -50,7 +50,6 @@ struct CFolder
     for (int i = UnpackSizes.Size() - 1; i >= 0; i--)
       if (FindBindPairForOutStream(i) < 0)
         return UnpackSizes[i];
-    throw 1;
   }
 
   CNum GetNumOutStreams() const

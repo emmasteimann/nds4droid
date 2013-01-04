@@ -407,8 +407,7 @@ STDMETHODIMP CHandler::Open(IInStream *stream,
   #ifndef _SFX
   _fileInfoPopIDs.Clear();
   #endif
-  try
-  {
+
     CMyComPtr<IArchiveOpenCallback> openArchiveCallbackTemp = openArchiveCallback;
 
     #ifndef _NO_CRYPTO
@@ -435,12 +434,7 @@ STDMETHODIMP CHandler::Open(IInStream *stream,
     RINOK(result);
     _db.Fill();
     _inStream = stream;
-  }
-  catch(...)
-  {
-    Close();
-    return S_FALSE;
-  }
+
   // _inStream = stream;
   #ifndef _SFX
   FillPopIDs();

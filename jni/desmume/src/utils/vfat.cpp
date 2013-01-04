@@ -176,16 +176,16 @@ bool VFAT::build(const char* path, int extra_MB)
 	}
 	
 	delete file;
-	try 
-	{
-		file = new EMUFILE_MEMORY(dataSectors*512);
-	}
-	catch(std::bad_alloc)
+
+	file = new EMUFILE_MEMORY(dataSectors*512);
+
+	if(file == NULL)
 	{
 		printf("error allocating memory for fat (%d KBytes)\n",(dataSectors*512)/1024);
 		printf("(out of memory)\n");
 		return false;
 	}
+
 
 	//debug..
 	//file = new EMUFILE_FILE("c:\\temp.ima","rb+");

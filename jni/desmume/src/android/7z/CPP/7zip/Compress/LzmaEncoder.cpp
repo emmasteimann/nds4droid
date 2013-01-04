@@ -59,8 +59,7 @@ CEncoder::CEncoder()
   _seqOutStream.SeqOutStream.Write = MyWrite;
   _encoder = 0;
   _encoder = LzmaEnc_Create(&g_Alloc);
-  if (_encoder == 0)
-    throw 1;
+
 }
 
 CEncoder::~CEncoder()

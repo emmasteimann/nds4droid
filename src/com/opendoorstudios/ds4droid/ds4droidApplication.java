@@ -17,17 +17,14 @@ package com.opendoorstudios.ds4droid;
 	along with the this software.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import org.acra.*;
-import org.acra.annotation.*;
+
 
 import android.app.Application;
 
-//@ReportsCrashes(formKey = "")
 public class ds4droidApplication extends Application {
 	
 	@Override
 	public void onCreate() {
-		//ACRA.init(this);
 		super.onCreate();
 	}
 

@@ -76,10 +76,9 @@ static bool IsAsciiString(const UString &s)
   return true;
 }
 
-#define COM_TRY_BEGIN2 try {
-#define COM_TRY_END2 } \
-catch(const CSystemException &e) { return e.ErrorCode; } \
-catch(...) { return E_OUTOFMEMORY; }
+#define COM_TRY_BEGIN2 {
+#define COM_TRY_END2 }
+
 
 static HRESULT GetTime(IArchiveUpdateCallback *callback, int index, PROPID propID, FILETIME &filetime)
 {

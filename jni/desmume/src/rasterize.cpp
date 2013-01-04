@@ -1076,7 +1076,7 @@ static char SoftRastInit(void)
 		_HACK_viewer_rasterizerUnit.SLI_MASK = 1;
 		_HACK_viewer_rasterizerUnit.SLI_VALUE = 0;
 
-		if(CommonSettings.num_cores>=4)
+		if(CommonSettings.num_cores>4)
 		{
 			rasterizerCores = 4;
 			rasterizerUnit[0].SLI_MASK = 3;

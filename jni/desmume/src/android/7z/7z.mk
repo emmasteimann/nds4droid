@@ -135,6 +135,6 @@ LOCAL_SRC_FILES			:= 	C/Threads.c \
 
 LOCAL_ARM_MODE 			:= 	thumb
 LOCAL_ARM_NEON 			:= 	false
-LOCAL_CFLAGS			:= -fexceptions -DCOMPRESS_MT
+LOCAL_CFLAGS			:= -DCOMPRESS_MT
 
 include $(BUILD_STATIC_LIBRARY)

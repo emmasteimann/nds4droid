@@ -67,7 +67,7 @@ bool CInBuffer::ReadBlock()
   ErrorCode = result;
   #else
   if (result != S_OK)
-    throw CInBufferException(result);
+    return false;
   #endif
   _buffer = _bufferBase;
   _bufferLimit = _buffer + numProcessedBytes;

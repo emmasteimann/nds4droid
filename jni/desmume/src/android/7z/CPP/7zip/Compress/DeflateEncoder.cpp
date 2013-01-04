@@ -965,9 +965,7 @@ HRESULT CCoder::CodeReal(ISequentialInStream *inStream, ISequentialOutStream *ou
 HRESULT CCoder::BaseCode(ISequentialInStream *inStream, ISequentialOutStream *outStream,
     const UInt64 *inSize, const UInt64 *outSize, ICompressProgressInfo *progress)
 {
-  try { return CodeReal(inStream, outStream, inSize, outSize, progress); }
-  catch(const COutBufferException &e) { return e.ErrorCode; }
-  catch(...) { return E_FAIL; }
+  return CodeReal(inStream, outStream, inSize, outSize, progress); 
 }
 
 STDMETHODIMP CCOMCoder::Code(ISequentialInStream *inStream, ISequentialOutStream *outStream,

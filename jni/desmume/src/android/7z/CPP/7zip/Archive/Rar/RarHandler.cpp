@@ -438,15 +438,12 @@ STDMETHODIMP CHandler::Open(IInStream *stream,
 {
   COM_TRY_BEGIN
   Close();
-  try
-  {
+
     HRESULT res = Open2(stream, maxCheckStartPosition, openArchiveCallback);
     if (res != S_OK)
       Close();
     return res;
-  }
-  catch(const CInArchiveException &) { Close(); return S_FALSE; }
-  catch(...) { Close(); throw; }
+  
   COM_TRY_END
 }
 

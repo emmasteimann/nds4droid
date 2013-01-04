@@ -151,14 +151,15 @@ class EmulatorThread extends Thread {
 					soundPaused = false;
 				}
 				
-				long frameStartTime = System.currentTimeMillis();
+				final long frameStartTime = System.currentTimeMillis();
 				inFrameLock.lock();
 				DeSmuME.runCore();
 				inFrameLock.unlock();
 				fps = DeSmuME.runOther();
+				final long frameEndTime = System.currentTimeMillis();
 				
 				
-				//Log.i(MainActivity.TAG, String.format("Frame: %d FPS", fps));
+				//Log.i(MainActivity.TAG, String.format("Frame: %d ms", frameEndTime - frameStartTime));
 
 				activity.msgHandler.sendEmptyMessage(MainActivity.DRAW_SCREEN);
 		

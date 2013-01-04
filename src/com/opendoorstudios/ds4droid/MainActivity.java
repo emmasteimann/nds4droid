@@ -31,9 +31,7 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
@@ -42,7 +40,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.util.SparseIntArray;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -243,6 +240,7 @@ public class MainActivity extends Activity implements OnSharedPreferenceChangeLi
 			startActivity(new Intent(this, Cheats.class));
 			break;
 		case R.id.exit:
+			DeSmuME.exit();
 			finish();
 			break;
 		default:

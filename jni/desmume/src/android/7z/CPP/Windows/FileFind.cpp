@@ -220,7 +220,7 @@ static int fillin_CFileInfo(CFileInfo &fileInfo,const char *dir,const char *name
   size_t dir_len = strlen(dir);
   size_t name_len = strlen(name);
   size_t total = dir_len + 1 + name_len; // 1 = strlen("/");
-  if (total >= MAX_PATHNAME_LEN) throw "fillin_CFileInfo - internal error - MAX_PATHNAME_LEN";
+  if (total >= MAX_PATHNAME_LEN) return -1;
   memcpy(filename,dir,dir_len);
   if (dir_len >= 1)
   {
@@ -241,7 +241,7 @@ static int fillin_CFileInfo(CFileInfo &fileInfo,const char *dir,const char *name
         err_msg += " (";
         err_msg += strerror(errno);
         err_msg += ")";
-        throw err_msg;
+        return -1;
   }
   return ret;
 }

@@ -51,8 +51,7 @@ HRESULT SetMethodProperties(const CMethod &method, const UInt64 *inSizeForReduce
       CRecordVector<PROPID> propIDs;
       NWindows::NCOM::CPropVariant *values = new NWindows::NCOM::CPropVariant[numProps];
       HRESULT res = S_OK;
-      try
-      {
+
         for (int i = 0; i < numProps; i++)
         {
           const CProp &prop = method.Props[i];
@@ -69,12 +68,7 @@ HRESULT SetMethodProperties(const CMethod &method, const UInt64 *inSizeForReduce
         CMyComPtr<ICompressSetCoderProperties> setCoderProperties;
         coder->QueryInterface(IID_ICompressSetCoderProperties, (void **)&setCoderProperties);
         res = setCoderProperties->SetCoderProperties(&propIDs.Front(), values, numProps);
-      }
-      catch(...)
-      {
-        delete []values;
-        throw;
-      }
+     
       delete []values;
       RINOK(res);
     }

@@ -33,7 +33,7 @@ public:
 
 	int currentfilter;
 
-	u8* srcBuffer;
+	CACHE_ALIGN u8* srcBuffer;
 	CACHE_ALIGN u32 buffer[16*256*192*2];
 	CACHE_ALIGN u32 filteredbuffer[16*256*192*2];
 

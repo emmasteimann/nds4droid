@@ -216,13 +216,11 @@ STDMETHODIMP CHandler::Extract(const UInt32* indices, UInt32 numItems,
       extractCallback.QueryInterface(IID_ICryptoGetTextPassword, &getTextPassword);
     #endif
 
-    try
-    {
       #ifndef _NO_CRYPTO
       bool passwordIsDefined;
       #endif
 
-      HRESULT result = decoder.Decode(
+      result = decoder.Decode(
           EXTERNAL_CODECS_VARS
           #ifdef _7Z_VOL
           volume.Stream,
@@ -259,12 +257,6 @@ STDMETHODIMP CHandler::Extract(const UInt32* indices, UInt32 numItems,
         RINOK(folderOutStream->FlushCorrupted(NArchive::NExtract::NOperationResult::kDataError));
         continue;
       }
-    }
-    catch(...)
-    {
-      RINOK(folderOutStream->FlushCorrupted(NArchive::NExtract::NOperationResult::kDataError));
-      continue;
-    }
   }
   return S_OK;
   COM_TRY_END

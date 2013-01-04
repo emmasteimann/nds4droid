@@ -40,6 +40,7 @@
 #include "firmware.h"
 #include "version.h"
 #include "slot1.h"
+#include "utils\task.h"
 
 #include "path.h"
 
@@ -80,6 +81,8 @@ int lastLag;
 int TotalLagFrames;
 
 TSCalInfo TSCal;
+
+Task arm9task, arm7task;
 
 namespace DLDI
 {
@@ -148,6 +151,9 @@ int NDS_Init( void) {
 
 	cheats = new CHEATS();
 	cheatSearch = new CHEATSEARCH();
+
+	//arm7task.start(true);
+	//arm9task.start(true);
 
 	return 0;
 }
@@ -1941,8 +1947,8 @@ FORCEINLINE void arm7log()
 }
 
 //these have not been tuned very well yet.
-static const int kMaxWork = 4000;
-static const int kIrqWait = 4000;
+static const int kMaxWork = 5000;
+static const int kIrqWait = 5000;
 
 
 template<bool doarm9, bool doarm7>
@@ -1957,23 +1963,99 @@ static FORCEINLINE s32 minarmtime(s32 arm9, s32 arm7)
 		return arm7;
 }
 
+void* executearm9(void* param)
+{
+	const s32 cycles = reinterpret_cast<s32>(param);
+	s32 ret = 0;
+	while(ret < cycles && !sequencer.reschedule)
+	{
+		if(!NDS_ARM9.waitIRQ&&!nds.freezeBus)
+			ret += armcpu_exec<ARMCPU_ARM9>();
+		else
+		{
+			s32 temp = ret;
+			ret = std::min(cycles, ret + kIrqWait);
+			nds.idleCycles[0] += ret-temp;
+			if (gxFIFO.size < 255) nds.freezeBus &= ~1;
+		}
+	}
+	return reinterpret_cast<void*>(ret);
+}
+void* executearm7(void* param)
+{
+	const s32 cycles = reinterpret_cast<s32>(param);
+	s32 ret = 0;
+	while(ret < cycles && !sequencer.reschedule)
+	{
+		if(!NDS_ARM7.waitIRQ&&!nds.freezeBus)
+			ret += (armcpu_exec<ARMCPU_ARM7>()) << 1;
+		else
+		{
+			s32 temp = ret;
+			ret = min(cycles, ret + kIrqWait);
+			nds.idleCycles[1] += ret-temp;
+		}
+	}
+	return reinterpret_cast<void*>(ret);
+}
+
 template<bool doarm9, bool doarm7>
-static /*donotinline*/ std::pair<s32,s32> armInnerLoop(
-	const u64 nds_timer_base, const s32 s32next, s32 arm9, s32 arm7) HOT;
+static /*donotinline*/ std::pair<s32,s32> armInnerLoopMulticore(
+	const u64 nds_timer_base, const s32 s32next, s32 arm9, s32 arm7)
+{
+	//s32next is how many instructions we should execute
+	s32 timer = minarmtime<doarm9,doarm7>(arm9,arm7);
+	//printf("start: timer = %i, s32next = %i, arm9 = %i, arm7 = %i\n", s32next, arm9, arm7);
+	
+	while(timer < s32next && !sequencer.reschedule && execute)
+	{
+		s32 arm9cycles = s32next;
+		s32 arm7cycles = s32next;
+		const bool arm7halted = !doarm7  || (arm7cycles <= 0);
+		const bool arm9halted = !doarm9  || (arm9cycles <= 0);
+		s32 arm9execed = 0;
+		s32 arm7execed = 0;
+		s32 timeradd = 0;
+
+		if(!arm9halted)
+			arm9task.execute(executearm9, reinterpret_cast<void*>(arm9cycles));
+
+		if(!arm7halted)
+			arm7task.execute(executearm7, reinterpret_cast<void*>(arm7cycles));
+
+		if(!arm9halted)
+			arm9execed = reinterpret_cast<s32>(arm9task.finish());
+
+		if(!arm7halted)
+			arm7execed = reinterpret_cast<s32>(arm7task.finish());
+
+		arm9 += arm9execed;
+		arm7 += arm7execed;
+
+		timer = minarmtime<doarm9,doarm7>(arm9,arm7);
+		nds_timer = nds_timer_base + timer;
+	}
+
+	//printf("finish: timer = %i, s32next = %i, arm9 = %i, arm7 = %i\n", timer, s32next, arm9, arm7);
+	return std::make_pair(arm9, arm7);
+}
 
 template<bool doarm9, bool doarm7>
 static /*donotinline*/ std::pair<s32,s32> armInnerLoop(
 	const u64 nds_timer_base, const s32 s32next, s32 arm9, s32 arm7)
 {
+	//if(CommonSettings.num_cores > 1)
+	//	return armInnerLoopMulticore<doarm9,doarm7>(nds_timer_base, s32next, arm9, arm7);
 	s32 timer = minarmtime<doarm9,doarm7>(arm9,arm7);
-	while(timer < s32next && !sequencer.reschedule)
+	//printf("start: timer = %i, s32next = %i, arm9 = %i, arm7 = %i\n", timer, s32next, arm9, arm7);
+	while(timer < s32next && !sequencer.reschedule/* && execute*/)
 	{
-		if(doarm9 && (!doarm7 || arm9 <= timer))
+		if(doarm9 /*&& (!doarm7 || arm9 <= timer)*/)
 		{
-			if(!NDS_ARM9.waitIRQ&&!nds.freezeBus)
+			if(!(NDS_ARM9.waitIRQ||nds.freezeBus))
 			{
-				arm9log();
-				debug();
+				//arm9log();
+				//debug();
 				arm9 += armcpu_exec<ARMCPU_ARM9>();
 				#ifdef DEVELOPER
 					nds_debug_continuing[0] = false;
@@ -1987,11 +2069,11 @@ static /*donotinline*/ std::pair<s32,s32> armInnerLoop(
 				if (gxFIFO.size < 255) nds.freezeBus &= ~1;
 			}
 		}
-		if(doarm7 && (!doarm9 || arm7 <= timer))
+		if(doarm7 /*&& (!doarm9 || arm7 <= timer)*/)
 		{
-			if(!NDS_ARM7.waitIRQ&&!nds.freezeBus)
+			if(!(NDS_ARM7.waitIRQ||nds.freezeBus))
 			{
-				arm7log();
+				//arm7log();
 				arm7 += (armcpu_exec<ARMCPU_ARM7>()<<1);
 				#ifdef DEVELOPER
 					nds_debug_continuing[1] = false;
@@ -2011,9 +2093,9 @@ static /*donotinline*/ std::pair<s32,s32> armInnerLoop(
 		}
 
 		timer = minarmtime<doarm9,doarm7>(arm9,arm7);
-		nds_timer = nds_timer_base + timer;
 	}
-
+	//printf("finish: timer = %i, s32next = %i, arm9 = %i, arm7 = %i\n", timer, s32next, arm9, arm7);
+	nds_timer = nds_timer_base + timer;
 	return std::make_pair(arm9, arm7);
 }
 

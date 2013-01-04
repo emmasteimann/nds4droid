@@ -287,8 +287,6 @@ CEncoder::CEncoder(const CCompressionMethodMode &options):
   _bindReverseConverter(0),
   _constructed(false)
 {
-  if (options.IsEmpty())
-    throw 1;
 
   _options = options;
   _mixerCoderSpec = NULL;
@@ -302,9 +300,9 @@ HRESULT CEncoder::EncoderConstr()
   {
     // it has only password method;
     if (!_options.PasswordIsDefined)
-      throw 1;
+      return -1;
     if (!_options.Binds.IsEmpty())
-      throw 1;
+      return -1;
     NCoderMixer::CCoderStreamsInfo coderStreamsInfo;
     CMethodFull method;
     
@@ -372,7 +370,7 @@ HRESULT CEncoder::EncoderConstr()
       _bindInfo.InStreams.Add(i);
 
   if (_bindInfo.InStreams.IsEmpty())
-    throw 1; // this is error
+    return -1; // this is error
 
   // Make main stream first in list
   int inIndex = _bindInfo.InStreams[0];

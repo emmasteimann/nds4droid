@@ -22,21 +22,19 @@ namespace NRar {
 void CInArchive::ThrowExceptionWithCode(
     CInArchiveException::CCauseType cause)
 {
-  throw CInArchiveException(cause);
+
 }
 
 HRESULT CInArchive::Open(IInStream *inStream, const UInt64 *searchHeaderSizeLimit)
 {
-  try
-  {
+
     Close();
     HRESULT res = Open2(inStream, searchHeaderSizeLimit);
     if (res == S_OK)
       return res;
     Close();
     return res;
-  }
-  catch(...) { Close(); throw; }
+
 }
 
 void CInArchive::Close()
@@ -268,7 +266,7 @@ void CInArchive::ReadName(CItemEx &item, int nameSize)
 Byte CInArchive::ReadByte()
 {
   if (m_CurPos >= m_PosLimit)
-    throw CInArchiveException(CInArchiveException::kIncorrectArchive);
+    return 0;
   return m_CurData[m_CurPos++];
 }
 

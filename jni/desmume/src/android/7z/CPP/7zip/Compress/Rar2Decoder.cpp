@@ -372,10 +372,7 @@ HRESULT CDecoder::CodeReal(ISequentialInStream *inStream, ISequentialOutStream *
 STDMETHODIMP CDecoder::Code(ISequentialInStream *inStream, ISequentialOutStream *outStream,
     const UInt64 *inSize, const UInt64 *outSize, ICompressProgressInfo *progress)
 {
-  try { return CodeReal(inStream, outStream, inSize, outSize, progress); }
-  catch(const CInBufferException &e) { return e.ErrorCode; }
-  catch(const CLzOutWindowException &e) { return e.ErrorCode; }
-  catch(...) { return S_FALSE; }
+  return CodeReal(inStream, outStream, inSize, outSize, progress);
 }
 
 STDMETHODIMP CDecoder::SetDecoderProperties2(const Byte *data, UInt32 size)

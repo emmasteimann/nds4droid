@@ -86,7 +86,7 @@ bool CCoder::ReadLevelItems(NImplode::NHuffman::CDecoder &decoder,
     int rep = m_InBitStream.ReadBits(kNumLevelStructureRepNumberBits) +
       kLevelStructureRepNumberAdditionalValue;
     if (currentIndex + rep > numLevelItems)
-      throw CException(CException::kData);
+      return false;
     for(int j = 0; j < rep; j++)
       levels[currentIndex++] = (Byte)level;
   }
@@ -195,9 +195,7 @@ HRESULT CCoder::CodeReal(ISequentialInStream *inStream, ISequentialOutStream *ou
 STDMETHODIMP CCoder::Code(ISequentialInStream *inStream, ISequentialOutStream *outStream,
     const UInt64 *inSize, const UInt64 *outSize, ICompressProgressInfo *progress)
 {
-  try { return CodeReal(inStream, outStream, inSize, outSize, progress);  }
-  catch(const CLzOutWindowException &e) { return e.ErrorCode; }
-  catch(...) { return S_FALSE; }
+  return CodeReal(inStream, outStream, inSize, outSize, progress);  
 }
 
 STDMETHODIMP CCoder::SetDecoderProperties2(const Byte *data, UInt32 size)

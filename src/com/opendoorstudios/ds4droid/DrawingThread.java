@@ -26,6 +26,7 @@ import com.opendoorstudios.ds4droid.MainActivity.NDSView;
 
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 
 class DrawingThread extends Thread{
 	
@@ -33,10 +34,12 @@ class DrawingThread extends Thread{
 		super("DrawingThread");
 		this.view = view;
 		this.coreThread = coreThread;
+		bitmapPaint.setFilterBitmap(false);
 	}
 	
 	final NDSView view;
 	final EmulatorThread coreThread;
+	final Paint bitmapPaint = new Paint();
 	
 	Lock drawEventLock = new ReentrantLock();
 	Condition drawEvent = drawEventLock.newCondition();
@@ -89,12 +92,12 @@ class DrawingThread extends Thread{
 						if(!DO_DIRECT_DRAW) {
 
 							if(view.lcdSwap) {
-								canvas.drawBitmap(view.emuBitmapTouch, view.srcMain, view.destMain, null);
-								canvas.drawBitmap(view.emuBitmapMain, view.srcTouch, view.destTouch, null);
+								canvas.drawBitmap(view.emuBitmapTouch, view.srcMain, view.destMain, bitmapPaint);
+								canvas.drawBitmap(view.emuBitmapMain, view.srcTouch, view.destTouch, bitmapPaint);
 							}
 							else {
-								canvas.drawBitmap(view.emuBitmapMain, view.srcMain, view.destMain, null);
-								canvas.drawBitmap(view.emuBitmapTouch, view.srcTouch, view.destTouch, null);
+								canvas.drawBitmap(view.emuBitmapMain, view.srcMain, view.destMain, bitmapPaint);
+								canvas.drawBitmap(view.emuBitmapTouch, view.srcTouch, view.destTouch, bitmapPaint);
 							}
 							
 							MainActivity.controls.drawControls(canvas);

@@ -40,7 +40,7 @@
 // and in particular, DMA or code+data access bus contention is still missing.
 
 	//disable this to prevent the advanced timing logic from ever running at all
-#define ENABLE_ADVANCED_TIMING
+//#define ENABLE_ADVANCED_TIMING
 
 #ifdef ENABLE_ADVANCED_TIMING
 	// makes non-sequential accesses slower than sequential ones.

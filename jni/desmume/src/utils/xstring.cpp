@@ -632,7 +632,7 @@ namespace UtfConverter
             if (res != conversionOK)
             {
                 delete [] widestringnative;
-                throw std::exception();
+                return L"";
             }
             *targetstart = 0;
             std::wstring resultstring(widestringnative);
@@ -650,7 +650,7 @@ namespace UtfConverter
             if (res != conversionOK)
             {
                 delete [] widestringnative;
-                throw std::exception();
+                return L"";
             }
             *targetstart = 0;
             std::wstring resultstring(widestringnative);
@@ -659,7 +659,7 @@ namespace UtfConverter
         }
         else
         {
-            throw std::exception();
+            return L"";
         }
         return L"";
     }
@@ -680,7 +680,7 @@ namespace UtfConverter
             if (res != conversionOK)
             {
                 delete [] utf8stringnative;
-                throw std::exception();
+                return "";
             }
             *targetstart = 0;
             std::string resultstring(utf8stringnative);
@@ -699,7 +699,7 @@ namespace UtfConverter
             if (res != conversionOK)
             {
                 delete [] utf8stringnative;
-                throw std::exception();
+                return "";
             }
             *targetstart = 0;
             std::string resultstring(utf8stringnative);
@@ -708,7 +708,7 @@ namespace UtfConverter
         }
         else
         {
-            throw std::exception();
+            return "";
         }
         return "";
     }
@@ -717,11 +717,7 @@ namespace UtfConverter
 //convert a std::string to std::wstring
 std::wstring mbstowcs(std::string str)
 {
-	try {
-		return UtfConverter::FromUtf8(str);
-	} catch(std::exception) {
-		return L"(failed UTF-8 conversion)";
-	}
+	return UtfConverter::FromUtf8(str);
 }
 
 std::string wcstombs(std::wstring str)

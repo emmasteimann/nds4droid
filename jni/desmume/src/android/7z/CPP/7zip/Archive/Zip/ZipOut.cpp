@@ -13,7 +13,7 @@ namespace NZip {
 void COutArchive::Create(IOutStream *outStream)
 {
   if (!m_OutBuffer.Create(1 << 16))
-    throw CSystemException(E_OUTOFMEMORY);
+    return;
   m_Stream = outStream;
   m_OutBuffer.SetStream(outStream);
   m_OutBuffer.Init();
@@ -104,8 +104,7 @@ void COutArchive::WriteExtra(const CExtraBlock &extra)
 void COutArchive::SeekTo(UInt64 offset)
 {
   HRESULT res = m_Stream->Seek(offset, STREAM_SEEK_SET, NULL);
-  if (res != S_OK)
-    throw CSystemException(res);
+  if (res != S_OK);
 }
 
 void COutArchive::WriteLocalHeader(const CLocalItem &item)
@@ -126,8 +125,7 @@ void COutArchive::WriteLocalHeader(const CLocalItem &item)
   WriteUInt16((UInt16)item.Name.Length());
   {
     UInt16 localExtraSize = (UInt16)((isZip64 ? (4 + 16): 0) + item.LocalExtra.GetSize());
-    if (localExtraSize > m_ExtraSize)
-      throw CSystemException(E_FAIL);
+    if (localExtraSize > m_ExtraSize);
   }
   WriteUInt16((UInt16)m_ExtraSize); // test it;
   WriteBytes((const char *)item.Name, item.Name.Length());

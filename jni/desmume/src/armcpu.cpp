@@ -658,9 +658,10 @@ u32 armcpu_exec()
 
 	if(ARMPROC.CPSR.bits.T == 0)
 	{
+		const u32 condition = CONDITION(ARMPROC.instruction); 
 		if(
-			CONDITION(ARMPROC.instruction) == 0x0E  //fast path for unconditional instructions
-			|| (TEST_COND(CONDITION(ARMPROC.instruction), CODE(ARMPROC.instruction), ARMPROC.CPSR)) //handles any condition
+			condition == 0x0E  //fast path for unconditional instructions
+			|| (TEST_COND(condition, CODE(ARMPROC.instruction), ARMPROC.CPSR)) //handles any condition
 			)
 		{
 #ifdef HAVE_LUA

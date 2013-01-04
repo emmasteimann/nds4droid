@@ -92,6 +92,7 @@ class DeSmuME {
 	static native void deleteCheat(int pos);
 	static native void setMicPaused(int set);
 	static native void closeRom();
+	static native void exit();
 	
 	static boolean touchScreenMode = false;
 	static boolean inited = false;

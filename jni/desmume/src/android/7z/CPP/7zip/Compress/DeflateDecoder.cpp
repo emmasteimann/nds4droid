@@ -281,11 +281,8 @@ HRESULT CCoder::CodeReal(ISequentialInStream *inStream, ISequentialOutStream *ou
 
 #else
 
-#define DEFLATE_TRY_BEGIN try {
-#define DEFLATE_TRY_END } \
-  catch(const CInBufferException &e)  { return e.ErrorCode; } \
-  catch(const CLzOutWindowException &e)  { return e.ErrorCode; } \
-  catch(...) { return S_FALSE; }
+#define DEFLATE_TRY_BEGIN {
+#define DEFLATE_TRY_END }
 
 #endif
 

@@ -86,6 +86,8 @@ char androidTempPath[1024];
 bool useMmapForRomLoading;
 extern bool enableMicrophone;
 
+void doBitmapDraw(u8* pixels, u8* dest, int width, int height, int stride, int pixelFormat, int verticalOffset, bool rotate);
+
 extern "C" {
 
 void logCallback(const Logger& logger, const char* message)
@@ -202,105 +204,6 @@ void JNI_NOARGS(copyMasterBuffer)
 	}
 }
 
-void doBitmapDraw(u8* pixels, u8* dest, int width, int height, int stride, int pixelFormat, int verticalOffset, bool rotate)
-{
-	if(pixelFormat == ANDROID_BITMAP_FORMAT_RGBA_8888)
-	{
-		u32* src = (u32*)pixels;
-		src += (verticalOffset * (rotate ? height : width));
-		if(video.currentfilter == VideoInfo::NONE)
-		{
-			if(rotate)
-			{
-				for(int y = 0 ; y < height ; ++y)
-				{
-					u32* destline = (u32*)dest;
-					u32* srccol = src + (height - y - 1);
-					for(int x = 0 ; x < width ; ++x) 
-					{
-						*destline++ = *srccol;
-						srccol += height;
-					}
-					dest += stride;
-				}
-			}
-			else
-			{
-				if(stride == width * sizeof(u32)) //bitmap is the same size, we can do one massive memcpy
-					memcpy(dest, src, width * height * sizeof(u32));
-				else
-				{
-					for(int y = 0 ; y < height ; ++y)
-					{
-						memcpy(dest, &src[y * width], width * sizeof(u32));
-						dest += stride;
-					}
-				}
-			}
-		}
-		else
-		{
-			//the alpha channels are screwy because of interpolation
-			//we need to go pixel by pixel and clear them
-			if(rotate)
-			{
-				for(int y = 0 ; y < height ; ++y)
-				{
-					u32* destline = (u32*)dest;
-					u32* srccol = src + (height - y - 1);
-					for(int x = 0 ; x < width ; ++x) 
-					{
-						*destline++ = 0xFF000000 | *srccol;
-						srccol += height;
-					}
-					dest += stride;
-				}
-			}
-			else
-			{
-				for(int y = 0 ; y < height ; ++y)
-				{
-					u32* destline = (u32*)dest;
-					for(int x = 0 ; x < width ; ++x)
-						*destline++ = 0xFF000000 | *src++;
-					dest += stride;
-				}
-			}
-		}
-	}
-	else
-	{
-		u16* src = (u16*)pixels;
-		src += (verticalOffset * (rotate ? height : width));
-		if(rotate)
-		{
-			for(int y = 0 ; y < height ; ++y)
-			{
-				u16* destline = (u16*)dest;
-				u16* srccol = src + (height - y - 1);
-				for(int x = 0 ; x < width ; ++x) 
-				{
-					*destline++ = *srccol;
-					srccol += height;
-				}
-				dest += stride;
-			}
-		}
-		else
-		{
-			if(stride == width * sizeof(u16)) //bitmap is the same size, we can do one massive memcpy
-				memcpy(dest, src, width * height * sizeof(u16));
-			else
-			{
-				for(int y = 0 ; y < height ; ++y)
-				{
-					memcpy(dest, &src[y * width], width * sizeof(u16));
-					dest += stride;
-				}
-			}
-		}
-	}
-}
 
 void JNI(draw, jobject bitmapMain, jobject bitmapTouch, jboolean rotate)
 {
@@ -308,6 +211,7 @@ void JNI(draw, jobject bitmapMain, jobject bitmapTouch, jboolean rotate)
 		video.filter();
 	//here the magic happens
 	void* pixels = NULL;
+	//LOGI("width = %i, height = %i", bitmapInfo.width, bitmapInfo.height);
 	if(AndroidBitmap_lockPixels(env,bitmapMain,&pixels) >= 0)
 	{
 		doBitmapDraw((u8*)video.finalBuffer(), (u8*)pixels, bitmapInfo.width, bitmapInfo.height, bitmapInfo.stride, bitmapInfo.format, 0, rotate == JNI_TRUE);
@@ -919,6 +823,10 @@ void JNI_NOARGS(closeRom)
 	execute = false;
 	Hud.resetTransient();
 	NDS_Reset();
+}
+
+void JNI_NOARGS(exit)
+{
 }
 
 } //end extern "C"

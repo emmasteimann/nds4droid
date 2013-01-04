@@ -105,7 +105,6 @@ struct CBindInfo
       }
       streamIndex -= curSize;
     }
-    throw 1;
   }
   void FindOutStream(UInt32 streamIndex, UInt32 &coderIndex,
       UInt32 &coderStreamIndex) const
@@ -120,7 +119,6 @@ struct CBindInfo
       }
       streamIndex -= curSize;
     }
-    throw 1;
   }
 };
 

@@ -108,7 +108,7 @@ bool CFolder::CheckStructure() const
 
 class CInArchiveException {};
 
-static void ThrowException() { throw CInArchiveException(); }
+static void ThrowException() {  }
 static inline void ThrowEndOfData()   { ThrowException(); }
 static inline void ThrowUnsupported() { ThrowException(); }
 static inline void ThrowIncorrect()   { ThrowException(); }
@@ -1245,16 +1245,13 @@ HRESULT CInArchive::ReadDatabase(
     #endif
     )
 {
-  try
-  {
+
     return ReadDatabase2(
       EXTERNAL_CODECS_LOC_VARS db
       #ifndef _NO_CRYPTO
       , getTextPassword, passwordIsDefined
       #endif
       );
-  }
-  catch(CInArchiveException &) { return S_FALSE; }
 }
 
 }}

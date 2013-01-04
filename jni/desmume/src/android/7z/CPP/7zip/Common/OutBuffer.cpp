@@ -113,7 +113,6 @@ void COutBuffer::FlushWithCheck()
   #ifdef _NO_EXCEPTIONS
   ErrorCode = result;
   #else
-  if (result != S_OK)
-    throw COutBufferException(result);
+
   #endif
 }

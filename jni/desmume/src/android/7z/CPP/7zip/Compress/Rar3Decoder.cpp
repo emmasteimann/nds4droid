@@ -784,8 +784,7 @@ HRESULT CDecoder::CodeReal(ICompressProgressInfo *progress)
 STDMETHODIMP CDecoder::Code(ISequentialInStream *inStream, ISequentialOutStream *outStream,
     const UInt64 *inSize, const UInt64 *outSize, ICompressProgressInfo *progress)
 {
-  try
-  {
+
     if (inSize == NULL || outSize == NULL)
       return E_INVALIDARG;
 
@@ -816,11 +815,7 @@ STDMETHODIMP CDecoder::Code(ISequentialInStream *inStream, ISequentialOutStream 
     CCoderReleaser coderReleaser(this);
     _unpackSize = *outSize;
     return CodeReal(progress);
-  }
-  catch(const CInBufferException &e)  { return e.ErrorCode; }
-  catch(...) { return S_FALSE; }
-  // CNewException is possible here. But probably CNewException is caused
-  // by error in data stream.
+  
 }
 
 STDMETHODIMP CDecoder::SetDecoderProperties2(const Byte *data, UInt32 size)

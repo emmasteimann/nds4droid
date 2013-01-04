@@ -812,7 +812,7 @@ HRESULT COutArchive::WriteDatabase(
       _writeToStream = true;
       
       if (folders.Size() == 0)
-        throw 1;
+        return -1;
 
       WriteID(NID::kEncodedHeader);
       WritePackInfo(headerOffset, packSizes,

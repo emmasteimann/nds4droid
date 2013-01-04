@@ -350,16 +350,12 @@ STDMETHODIMP CHandler::Open(IInStream *inStream,
     const UInt64 *maxCheckStartPosition, IArchiveOpenCallback *callback)
 {
   COM_TRY_BEGIN
-  try
-  {
+
     Close();
     RINOK(inStream->Seek(0, STREAM_SEEK_SET, NULL));
     RINOK(m_Archive.Open(inStream, maxCheckStartPosition));
     CProgressImp progressImp(callback);
     return m_Archive.ReadHeaders(m_Items, &progressImp);
-  }
-  catch(const CInArchiveException &) { Close(); return S_FALSE; }
-  catch(...) { Close(); throw; }
   COM_TRY_END
 }
 

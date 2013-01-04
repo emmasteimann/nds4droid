@@ -39,16 +39,16 @@ void CBaseRecordVector::Reserve(int newCapacity)
   if (newCapacity == _capacity)
     return;
   if ((unsigned)newCapacity >= ((unsigned)1 << (sizeof(unsigned) * 8 - 1)))
-    throw 1052353;
+    return;
   size_t newSize = (size_t)(unsigned)newCapacity * _itemSize;
   if (newSize / _itemSize != (size_t)(unsigned)newCapacity)
-    throw 1052354;
+    return;
   unsigned char *p = NULL;
   if (newSize > 0)
   {
     p = new unsigned char[newSize];
     if (p == 0)
-      throw 1052355;
+      return;
     int numRecordsToMove = (_size < newCapacity ? _size : newCapacity);
     memcpy(p, _items, _itemSize * numRecordsToMove);
   }

@@ -187,7 +187,7 @@ struct armcpu_t
 	u32 instruct_adr; //8
 	u32 next_instruction; //12
 
-	u32 R[16]; //16
+	CACHE_ALIGN u32 R[16]; //16
 	Status_Reg CPSR;  //80
 	Status_Reg SPSR;
 

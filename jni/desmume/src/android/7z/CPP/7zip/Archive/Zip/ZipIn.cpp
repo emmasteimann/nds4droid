@@ -126,22 +126,20 @@ HRESULT CInArchive::ReadBytes(void *data, UInt32 size, UInt32 *processedSize)
 
 void CInArchive::IncreaseRealPosition(UInt64 addValue)
 {
-  if (m_Stream->Seek(addValue, STREAM_SEEK_CUR, &m_Position) != S_OK)
-    throw CInArchiveException(CInArchiveException::kSeekStreamError);
+  if (m_Stream->Seek(addValue, STREAM_SEEK_CUR, &m_Position) != S_OK);
 }
 
 bool CInArchive::ReadBytesAndTestSize(void *data, UInt32 size)
 {
   UInt32 realProcessedSize;
   if (ReadBytes(data, size, &realProcessedSize) != S_OK)
-    throw CInArchiveException(CInArchiveException::kReadStreamError);
+    return false;
   return (realProcessedSize == size);
 }
 
 void CInArchive::SafeReadBytes(void *data, UInt32 size)
 {
-  if (!ReadBytesAndTestSize(data, size))
-    throw CInArchiveException(CInArchiveException::kUnexpectedEndOfArchive);
+  if (!ReadBytesAndTestSize(data, size));
 }
 
 void CInArchive::ReadBuffer(CByteBuffer &buffer, UInt32 size)
@@ -336,8 +334,7 @@ HRESULT CInArchive::ReadLocalItemAfterCdItem(CItemEx &item)
 {
   if (item.FromLocal)
     return S_OK;
-  try
-  {
+
     RINOK(Seek(m_ArchiveInfo.Base + item.LocalHeaderPosition));
     CItemEx localItem;
     if (ReadUInt32() != NSignature::kLocalFileHeader)
@@ -372,8 +369,7 @@ HRESULT CInArchive::ReadLocalItemAfterCdItem(CItemEx &item)
     item.LocalExtraSize = localItem.LocalExtraSize;
     item.LocalExtra = localItem.LocalExtra;
     item.FromLocal = true;
-  }
-  catch(...) { return S_FALSE; }
+
   return S_OK;
 }
 
@@ -432,8 +428,7 @@ HRESULT CInArchive::ReadLocalItemAfterCdItemFull(CItemEx &item)
 {
   if (item.FromLocal)
     return S_OK;
-  try
-  {
+
     RINOK(ReadLocalItemAfterCdItem(item));
     if (item.HasDescriptor())
     {
@@ -459,8 +454,7 @@ HRESULT CInArchive::ReadLocalItemAfterCdItemFull(CItemEx &item)
       if (crc != item.FileCRC || item.PackSize != packSize || item.UnPackSize != unpackSize)
         return S_FALSE;
     }
-  }
-  catch(...) { return S_FALSE; }
+
   return S_OK;
 }
   
@@ -496,7 +490,7 @@ HRESULT CInArchive::ReadCdItem(CItemEx &item)
   }
 
   if (headerDiskNumberStart != 0)
-    throw CInArchiveException(CInArchiveException::kMultiVolumeArchiveAreNotSupported);
+    return -1;
   
   // May be these strings must be deleted
   /*
@@ -793,7 +787,7 @@ HRESULT CInArchive::ReadHeaders(CObjectVector<CItemEx> &items, CProgressVirt *pr
     if (!ReadUInt32(m_Signature))
       return S_FALSE;
     if (ecd64.thisDiskNumber != 0 || ecd64.startCDDiskNumber != 0)
-      throw CInArchiveException(CInArchiveException::kMultiVolumeArchiveAreNotSupported);
+      return S_FALSE;
     if (ecd64.numEntriesInCDOnThisDisk != items.Size() ||
         ecd64.numEntriesInCD != items.Size() ||
         ecd64.cdSize != cdSize ||
@@ -830,7 +824,7 @@ HRESULT CInArchive::ReadHeaders(CObjectVector<CItemEx> &items, CProgressVirt *pr
   ReadBuffer(m_ArchiveInfo.Comment, ecd.commentSize);
 
   if (ecd64.thisDiskNumber != 0 || ecd64.startCDDiskNumber != 0)
-    throw CInArchiveException(CInArchiveException::kMultiVolumeArchiveAreNotSupported);
+    return S_FALSE;
   if ((UInt16)ecd64.numEntriesInCDOnThisDisk != ((UInt16)items.Size()) ||
       (UInt16)ecd64.numEntriesInCD != ((UInt16)items.Size()) ||
       (UInt32)ecd64.cdSize != (UInt32)cdSize ||

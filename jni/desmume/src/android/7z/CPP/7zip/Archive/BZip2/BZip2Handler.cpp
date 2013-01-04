@@ -51,8 +51,7 @@ STDMETHODIMP CHandler::Open(IInStream *stream,
     IArchiveOpenCallback * /* openArchiveCallback */)
 {
   COM_TRY_BEGIN
-  try
-  {
+
     RINOK(stream->Seek(0, STREAM_SEEK_CUR, &_streamStartPosition));
     const int kSignatureSize = 3;
     Byte buffer[kSignatureSize];
@@ -65,11 +64,7 @@ STDMETHODIMP CHandler::Open(IInStream *stream,
     _item.PackSize = endPosition - _streamStartPosition;
     
     _stream = stream;
-  }
-  catch(...)
-  {
-    return S_FALSE;
-  }
+  
   return S_OK;
   COM_TRY_END
 }

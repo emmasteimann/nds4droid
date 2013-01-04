@@ -1,0 +1,8 @@
+gen
+bin/*
+/gen
+/obj
+/libs
+.DS_Store
+*~
+*.bak
